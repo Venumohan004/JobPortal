@@ -7,9 +7,13 @@ from models import db
 
 from routes.auth import auth
 from routes.candidate import candidate
+from routes.recruiter import recruiter_bp
+
+from routes.jobs import jobs_bp
 
 app = Flask(__name__)
 
+# Load Configuration
 app.config.from_object(Config)
 
 # Enable CORS
@@ -24,6 +28,12 @@ jwt = JWTManager(app)
 # Register Blueprints
 app.register_blueprint(auth)
 app.register_blueprint(candidate)
+app.register_blueprint(recruiter_bp)
+app.register_blueprint(jobs_bp)
+
+# Create Database Tables
+with app.app_context():
+    db.create_all()
 
 
 @app.route("/")
@@ -35,9 +45,5 @@ def home():
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-
     print(app.url_map)
-    
     app.run(debug=True)
