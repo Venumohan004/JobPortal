@@ -15,6 +15,10 @@ from models.application import Application
 
 from routes.application import application_bp
 
+from models.resume import Resume
+
+from routes.resume import resume_bp
+
 app = Flask(__name__)
 
 # Load Configuration
@@ -35,6 +39,7 @@ app.register_blueprint(candidate)
 app.register_blueprint(recruiter_bp)
 app.register_blueprint(jobs_bp)
 app.register_blueprint(application_bp)
+app.register_blueprint(resume_bp)
 
 # Create Database Tables
 with app.app_context():
