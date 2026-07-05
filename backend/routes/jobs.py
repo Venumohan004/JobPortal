@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from models import db
 from models.job import Job
- 
+
 jobs_bp = Blueprint("jobs", __name__)
 @jobs_bp.route("/jobs", methods=["POST"])
 def create_job():
@@ -79,4 +79,65 @@ def delete_job(id):
 
     return jsonify({
         "message": "Job Deleted Successfully"
+    }), 200
+
+@jobs_bp.route("/jobs/search", methods=["GET"])
+def search_jobs():
+    title = request.args.get("title")
+
+    jobs = Job.query.filter(
+        Job.title.ilike(f"%{title}%")
+    ).all()
+
+    return jsonify({
+        "count": len(jobs),
+        "jobs": [job.to_dict() for job in jobs]
+    }), 200
+
+@jobs_bp.route("/jobs/company/<company>", methods=["GET"])
+def jobs_by_company(company):
+    jobs = Job.query.filter_by(company=company).all()
+
+    return jsonify({
+        "count": len(jobs),
+        "jobs": [job.to_dict() for job in jobs]
+    }), 200
+
+@jobs_bp.route("/jobs/location/<location>", methods=["GET"])
+def jobs_by_location(location):
+    jobs = Job.query.filter_by(location=location).all()
+
+    return jsonify({
+        "count": len(jobs),
+        "jobs": [job.to_dict() for job in jobs]
+    }), 200
+
+@jobs_bp.route("/jobs/salary/<int:salary>", methods=["GET"])
+def jobs_by_salary(salary):
+    jobs = Job.query.filter(Job.salary >= salary).all()
+
+    return jsonify({
+        "count": len(jobs),
+        "jobs": [job.to_dict() for job in jobs]
+    }), 200
+
+@jobs_bp.route("/jobs/page", methods=["GET"])
+def paginate_jobs():
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 5, type=int)
+
+    pagination = Job.query.paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
+    )
+
+    jobs = [job.to_dict() for job in pagination.items]
+
+    return jsonify({
+        "page": page,
+        "per_page": per_page,
+        "total_jobs": pagination.total,
+        "total_pages": pagination.pages,
+        "jobs": jobs
     }), 200
