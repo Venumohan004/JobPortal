@@ -1,95 +1,160 @@
 # Job Portal Backend
 
-A simple Job Portal Backend project built using **Python, Flask, MySQL, SQLAlchemy, and JWT Authentication**.
+A RESTful Job Portal Backend built using **Python, Flask, MySQL, SQLAlchemy, and JWT Authentication**.
 
-## Features Completed
+## 🚀 Tech Stack
 
-### Module 1
+* Python
+* Flask
+* MySQL
+* SQLAlchemy
+* Flask-JWT-Extended
+* Flask-CORS
+* Postman
+* Git & GitHub
+
+## 📂 Project Structure
+
+```text
+backend/
+│
+├── app.py
+├── config.py
+├── requirements.txt
+│
+├── models/
+│   ├── user.py
+│   ├── candidate.py
+│   ├── recruiter.py
+│   └── job.py
+│
+├── routes/
+│   ├── auth.py
+│   ├── candidate.py
+│   ├── recruiter.py
+│   └── jobs.py
+│
+└── utils/
+```
+
+## ✅ Features Completed
+
+### Day 1
 
 * Project Setup
 * Flask Configuration
 * MySQL Database Connection
+* SQLAlchemy Setup
 
-### Module 2
+### Day 2
 
-* User Registration API
-* User Login API
-* Password Hashing (bcrypt)
-
-### Module 3
-
+* User Registration
+* User Login
 * JWT Authentication
-* Protected Routes
-* User Profile API
 
-### Module 4
+### Day 3
 
-* Candidate Profile Module
-* Create Candidate Profile
-* Get Candidate Profile
+* Candidate Profile
+* View Candidate Profile
 * Update Candidate Profile
 
-## Technologies Used
-
-* Python
-* Flask
-* Flask SQLAlchemy
-* Flask JWT Extended
-* MySQL
-* bcrypt
-* Postman
-* Git & GitHub
-
-## Project Structure
-
-```text
-JobPortal/
-│
-├── backend/
-│   ├── app.py
-│   ├── config.py
-│   ├── models/
-│   ├── routes/
-│   ├── requirements.txt
-│   └── .env
-│
-└── README.md
-```
-
-## APIs Completed
-
-| Method | Endpoint           | Description              |
-| ------ | ------------------ | ------------------------ |
-| POST   | /register          | Register a new user      |
-| POST   | /login             | Login user               |
-| GET    | /profile           | Protected user profile   |
-| POST   | /candidate/profile | Create candidate profile |
-| GET    | /candidate/profile | Get candidate profile    |
-| PUT    | /candidate/profile | Update candidate profile |
-
-## Testing
-
-All APIs were tested successfully using **Postman**.
-
-## Current Progress
-
-* ✅ Project Setup
-* ✅ Database Connection
-* ✅ Registration
-* ✅ Login
-* ✅ JWT Authentication
-* ✅ Protected Routes
-* ✅ Candidate Profile Module
-
-## Next Module
+### Day 4
 
 * Recruiter Profile
-* Job Posting
-* Job Management
-* Job Applications
+* Create Job
+* Get All Jobs
+* Get Job by ID
+* Update Job
+* Delete Job
 
-## Author
+## 📌 API Endpoints
 
-**P. Venumohan**
+### Authentication
+
+* POST `/register`
+* POST `/login`
+* GET `/profile`
+
+### Candidate
+
+* POST `/candidate/profile`
+* GET `/candidate/profile`
+* PUT `/candidate/profile`
+
+### Recruiter
+
+* POST `/recruiter`
+
+### Jobs
+
+* POST `/jobs`
+* GET `/jobs`
+* GET `/jobs/<id>`
+* PUT `/jobs/<id>`
+* DELETE `/jobs/<id>`
+
+## 🛠️ Tools Used
+
+* Visual Studio Code
+* Postman
+* MySQL Workbench / MySQL Command Line
+* Git
+* GitHub
+
+## ▶️ Run the Project
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/Venumohan004/JobPortal.git
+```
+
+2. Navigate to the project
+
+```bash
+cd JobPortal/backend
+```
+
+3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Configure the `.env` file
+
+```env
+SECRET_KEY=your_secret_key
+JWT_SECRET_KEY=your_jwt_secret_key
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=job_portal_day4
+DB_USER=root
+DB_PASSWORD=your_password
+```
+
+5. Run the application
+
+```bash
+python app.py
+```
+
+The server will start at:
+
+```text
+http://127.0.0.1:5000/
+```
+
+## 🚀 Upcoming Features
+
+* Job Application Module
+* Resume Upload
+* Saved Jobs
+* Admin Panel
+* Search & Filter Jobs
+
+## 👨‍💻 Author
+
+**Pilli Venumohan**
 
 GitHub: https://github.com/Venumohan004
