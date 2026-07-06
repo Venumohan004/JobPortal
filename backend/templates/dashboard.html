@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<h2>Dashboard</h2>
+
+<hr>
+
+<div class="row">
+
+    <div class="col-md-4">
+        <a href="/jobs" class="btn btn-primary w-100 mb-3">
+            View Jobs
+        </a>
+    </div>
+
+    <div class="col-md-4">
+        <a href="/add-job" class="btn btn-success w-100 mb-3">
+            Add Job
+        </a>
+    </div>
+
+    <div class="col-md-4">
+        <a href="/profile" class="btn btn-warning w-100 mb-3">
+            Profile
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

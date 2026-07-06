@@ -1,7 +1,13 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from models.user import User
+from models import db
+
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
-from models import db
-from models.user import User
+ 
 import bcrypt
 
 from flask_jwt_extended import (

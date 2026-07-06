@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+
+        <div class="col-md-6">
+
+            <div class="card shadow p-4">
+
+                <h2 class="text-center mb-4">Register</h2>
+
+                <form id="registerForm">
+
+                    <div class="mb-3">
+                        <label>Full Name</label>
+                        <input type="text" id="full_name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Email</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Password</label>
+                        <input type="password" id="password" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Phone</label>
+                        <input type="text" id="phone" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Role</label>
+
+                        <select id="role" class="form-control">
+
+                            <option value="candidate">Candidate</option>
+
+                            <option value="recruiter">Recruiter</option>
+
+                        </select>
+
+                    </div>
+
+                    <button class="btn btn-success w-100">
+                        Register
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

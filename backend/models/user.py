@@ -1,4 +1,5 @@
 from . import db
+from datetime import datetime
 
 class User(db.Model):
     __tablename__ = "users"
@@ -18,10 +19,4 @@ class User(db.Model):
         nullable=False
     )
 
-    created_at = db.Column(
-        db.DateTime,
-        server_default=db.func.now()
-    )
-
-    def __repr__(self):
-        return f"<User {self.email}>"
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
