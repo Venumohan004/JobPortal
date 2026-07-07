@@ -1,11 +1,21 @@
 from flask import Blueprint, request, jsonify
 from models import db
 from models.job import Job
+from flask_jwt_extended import jwt_required, get_jwt
 
 jobs_bp = Blueprint("jobs", __name__)
 @jobs_bp.route("/jobs", methods=["POST"])
+@jwt_required()
 def create_job():
+
     try:
+        claims = get_jwt()
+
+        if claims["role"] != "recruiter":
+            return jsonify({
+                "message": "Only recruiters can create jobs"
+            }), 403
+            
         data = request.get_json()
         print("Received Data:", data)
 
@@ -41,7 +51,15 @@ def get_jobs():
     }), 200
 
 @jobs_bp.route("/jobs/<int:id>", methods=["PUT"])
+@jwt_required()
 def update_job(id):
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can update jobs"
+        }), 403
+
     job = Job.query.get(id)
 
     if not job:
@@ -66,7 +84,15 @@ def update_job(id):
     }), 200
 
 @jobs_bp.route("/jobs/<int:id>", methods=["DELETE"])
+@jwt_required()
 def delete_job(id):
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can delete jobs"
+        }), 403
+
     job = Job.query.get(id)
 
     if not job:
