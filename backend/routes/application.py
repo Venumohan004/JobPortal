@@ -1,15 +1,36 @@
 from flask import Blueprint, request, jsonify
 from models import db
 from models.application import Application
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 application_bp = Blueprint("application", __name__)
 
 @application_bp.route("/apply", methods=["POST"])
+@jwt_required()
 def apply_job():
     data = request.get_json()
 
+    claims = get_jwt()
+
+    if claims["role"] != "candidate":
+        return jsonify({
+        "message": "Only candidates can apply for jobs."
+    }), 403
+
+    candidate_id = int(get_jwt_identity())
+
+    existing_application = Application.query.filter_by(
+    candidate_id= candidate_id,
+    job_id=data["job_id"]
+    ).first()
+
+    if existing_application:
+       return jsonify({
+        "message": "You have already applied for this job."
+    }), 400
+
     application = Application(
-        candidate_id=data["candidate_id"],
+        candidate_id=candidate_id,
         job_id=data["job_id"]
     )
 
@@ -22,7 +43,17 @@ def apply_job():
     }), 201
 
 @application_bp.route("/applications", methods=["GET"])
+@jwt_required()
 def get_applications():
+
+    claims = get_jwt()
+    print(claims)
+
+    if claims["role"] not in ["recruiter", "admin"]:
+        return jsonify({
+        "message": "Access denied"
+    }), 403
+
     applications = Application.query.all()
 
     return jsonify({
@@ -31,8 +62,22 @@ def get_applications():
     }), 200
 
 @application_bp.route("/applications/<int:id>", methods=["DELETE"])
+@jwt_required()
 def delete_application(id):
+    claims = get_jwt()
+    user_id = int(get_jwt_identity())
+
     application = Application.query.get(id)
+
+    if not application:
+        return jsonify({
+            "message": "Application not found"
+        }), 404
+
+    if claims["role"] != "admin" and application.candidate_id != user_id:
+        return jsonify({
+            "message": "Access denied"
+        }), 403
 
     if not application:
         return jsonify({
@@ -47,11 +92,49 @@ def delete_application(id):
     }), 200
 
 @application_bp.route("/jobs/<int:job_id>/applications", methods=["GET"])
+@jwt_required()
 def get_job_applications(job_id):
+    
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can view job applications"
+        }), 403
+
     applications = Application.query.filter_by(job_id=job_id).all()
 
     return jsonify({
         "job_id": job_id,
         "count": len(applications),
         "applications": [application.to_dict() for application in applications]
+    }), 200
+
+@application_bp.route("/applications/<int:id>/status", methods=["PUT"])
+@jwt_required()
+def update_application_status(id):
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can update application status"
+        }), 403
+
+    application = Application.query.get(id)
+
+    if not application:
+        return jsonify({
+            "message": "Application not found"
+        }), 404
+
+    data = request.get_json()
+
+    application.status = data["status"]
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Application status updated successfully",
+        "application": application.to_dict()
     }), 200
