@@ -16,6 +16,7 @@ from flask_jwt_extended import (
     get_jwt_identity,
     get_jwt
 )
+from utils.email_service import send_email
 
 auth = Blueprint("auth", __name__)
 
@@ -81,6 +82,23 @@ def register():
 
     db.session.add(user)
     db.session.commit()
+
+    send_email(
+    subject="Welcome to Job Portal",
+    recipients=[user.email],
+    body=f"""
+    Hello {user.full_name},
+
+    Welcome to Job Portal!
+
+    Your account has been created successfully.
+
+    Happy Job Hunting!
+
+    Regards,
+    Job Portal Team
+    """
+    )
 
     return jsonify({
         "message": "Registration Successful"

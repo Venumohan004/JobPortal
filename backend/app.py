@@ -17,10 +17,13 @@ from routes.application import application_bp
 from routes.resume import resume_bp
 from routes.saved_jobs import saved_bp
 from routes.admin_routes import admin_bp
+from utils.email_service import mail
 
 app = Flask(__name__)
 
 app.config.from_object(Config)
+
+mail.init_app(app)
 
 CORS(app)
 
