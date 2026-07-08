@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from models import db
 from models.job import Job
 from flask_jwt_extended import jwt_required, get_jwt
+from flask_jwt_extended import get_jwt_identity
 
 jobs_bp = Blueprint("jobs", __name__)
 @jobs_bp.route("/jobs", methods=["POST"])
@@ -25,7 +26,7 @@ def create_job():
             location=data["location"],
             salary=data["salary"],
             description=data["description"],
-            created_by=data["created_by"]
+            created_by=get_jwt_identity()
         )
 
         db.session.add(job)
@@ -43,11 +44,51 @@ def create_job():
 
 @jobs_bp.route("/jobs", methods=["GET"])
 def get_jobs():
-    jobs = Job.query.all()
+
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 5, type=int)
+
+    company = request.args.get("company")
+    location = request.args.get("location")
+    title = request.args.get("title")
+    min_salary = request.args.get("min_salary", type=int)
+    sort = request.args.get("sort")
+
+    query = Job.query
+
+    if company:
+        query = query.filter(Job.company.ilike(f"%{company}%"))
+
+    if location:
+        query = query.filter(Job.location.ilike(f"%{location}%"))
+
+    if title:
+        query = query.filter(Job.title.ilike(f"%{title}%"))
+
+    if min_salary:
+        query = query.filter(Job.salary >= min_salary)
+
+    if sort == "salary_asc":
+        query = query.order_by(Job.salary.asc())
+    elif sort == "salary_desc":
+        query = query.order_by(Job.salary.desc())
+    elif sort == "latest":
+        query = query.order_by(Job.id.desc())
+    elif sort == "title":
+        query = query.order_by(Job.title.asc())
+
+    pagination = query.paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
+    )
 
     return jsonify({
-        "count": len(jobs),
-        "jobs": [job.to_dict() for job in jobs]
+        "page": page,
+        "per_page": per_page,
+        "total_jobs": pagination.total,
+        "total_pages": pagination.pages,
+        "jobs": [job.to_dict() for job in pagination.items]
     }), 200
 
 @jobs_bp.route("/jobs/<int:id>", methods=["PUT"])
@@ -166,4 +207,24 @@ def paginate_jobs():
         "total_jobs": pagination.total,
         "total_pages": pagination.pages,
         "jobs": jobs
+    }), 200
+
+@jobs_bp.route("/my-jobs", methods=["GET"])
+@jwt_required()
+def my_jobs():
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can view their jobs"
+        }), 403
+
+    recruiter_id = get_jwt_identity()
+
+    jobs = Job.query.filter_by(created_by=recruiter_id).all()
+
+    return jsonify({
+        "count": len(jobs),
+        "jobs": [job.to_dict() for job in jobs]
     }), 200
