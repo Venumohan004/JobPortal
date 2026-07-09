@@ -18,6 +18,15 @@ from flask_jwt_extended import (
 )
 from utils.email_service import send_email
 
+from utils.token_helper import (
+    generate_reset_token,
+    verify_reset_token
+)
+from utils.token_helper import generate_reset_token
+
+from utils.token_helper import verify_reset_token
+import bcrypt
+
 auth = Blueprint("auth", __name__)
 
 
@@ -111,7 +120,12 @@ def register():
 @auth.route("/login", methods=["POST"])
 def login():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
+
+        if not data:
+          return jsonify({
+        "message": "Please send JSON data"
+        }),400
 
         print("Received:", data)
 
@@ -160,4 +174,87 @@ def profile():
             "email": claims.get("email"),
             "role": claims.get("role")
         }
+    }), 200
+
+@auth.route("/forgot-password", methods=["POST"])
+def forgot_password():
+
+    data = request.get_json()
+
+    email = data.get("email")
+
+    if not email:
+        return jsonify({
+            "message": "Email is required"
+        }), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({
+            "message": "Email not found"
+        }), 404
+
+    token = generate_reset_token(user.email)
+
+    reset_link = f"http://127.0.0.1:5000/reset-password/{token}"
+
+    send_email(
+        subject="Password Reset",
+        recipients=[user.email],
+        body=f"""
+Hello {user.full_name},
+
+Click the link below to reset your password.
+
+{reset_link}
+
+This link will expire in 30 minutes.
+
+Regards,
+Job Portal Team
+"""
+    )
+
+    return jsonify({
+        "message": "Password reset link sent successfully"
+    }), 200
+
+@auth.route("/reset-password/<token>", methods=["POST"])
+def reset_password(token):
+
+    data = request.get_json()
+
+    new_password = data.get("password")
+
+    if not new_password:
+        return jsonify({
+            "message": "Password is required"
+        }), 400
+
+    email = verify_reset_token(token)
+
+    if not email:
+        return jsonify({
+            "message": "Invalid or expired token"
+        }), 400
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({
+            "message": "User not found"
+        }), 404
+
+    hashed_password = bcrypt.hashpw(
+        new_password.encode("utf-8"),
+        bcrypt.gensalt()
+    )
+
+    user.password = hashed_password.decode("utf-8")
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Password reset successfully"
     }), 200

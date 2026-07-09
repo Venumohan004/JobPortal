@@ -29,16 +29,16 @@ def create_profile():
         education=data.get("education"),
         experience=data.get("experience"),
         address=data.get("address"),
-        about=data.get("about")
+        about=data.get("about"),
+        location=data.get("location")
     )
 
     db.session.add(profile)
     db.session.commit()
 
     return jsonify({
-        "message": "Candidate profile created successfully"
+        "message": "Candidate Profile Created Successfully"
     }), 201
-
 
 # Get Candidate Profile
 @candidate.route("/candidate/profile", methods=["GET"])
@@ -60,7 +60,8 @@ def get_profile():
         "education": profile.education,
         "experience": profile.experience,
         "address": profile.address,
-        "about": profile.about
+        "about": profile.about,
+        "location": profile.location
     })
 
 
@@ -85,6 +86,7 @@ def update_profile():
     profile.experience = data.get("experience", profile.experience)
     profile.address = data.get("address", profile.address)
     profile.about = data.get("about", profile.about)
+    profile.location = data.get("location", profile.location)
 
     db.session.commit()
 
