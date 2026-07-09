@@ -1,75 +1,19 @@
-# 🚀 Job Portal Backend
+# Job Portal Backend
 
-A RESTful Job Portal Backend built using **Python, Flask, MySQL, SQLAlchemy, and JWT Authentication**. This project provides secure authentication, role-based authorization, job management, resume management, saved jobs, and job application features.
+A production-ready **RESTful Job Portal Backend** built using **Python, Flask, MySQL, SQLAlchemy, JWT Authentication, and Flask-Mail**.
 
----
-
-## 📌 Features
-
-### 👤 User Authentication
-
-* User Registration
-* User Login
-* JWT Authentication
-* Password Hashing using bcrypt
-* Protected Routes
-
-### 🔐 Role-Based Authorization
-
-* Candidate
-* Recruiter
-* Admin
-* Recruiter-only Job Management
-* Candidate-only Job Applications
-
-### 💼 Job Management
-
-* Create Job
-* View All Jobs
-* Update Job
-* Delete Job
-* Search Jobs
-* Filter Jobs by Company
-* Filter Jobs by Location
-* Filter Jobs by Salary
-* Pagination
-
-### 📄 Resume Management
-
-* Upload Resume
-* View Resume
-* Update Resume
-* Delete Resume
-
-### ⭐ Saved Jobs
-
-* Save Job
-* View Saved Jobs
-* Remove Saved Job
-
-### 📝 Job Applications
-
-* Apply for Job
-* Prevent Duplicate Applications
-* View Applications
-* Delete Own Application
-* Recruiter View Applications
-* Update Application Status
-
----
-
-# 🛠️ Tech Stack
+## 🚀 Tech Stack
 
 * Python
 * Flask
 * MySQL
 * SQLAlchemy
 * Flask-JWT-Extended
+* Flask-Mail
 * Flask-CORS
-* bcrypt
+* JWT Authentication
 * Postman
-* Git
-* GitHub
+* Git & GitHub
 
 ---
 
@@ -80,49 +24,160 @@ backend/
 │
 ├── app.py
 ├── config.py
-├── requirements.txt
-│
+├── extensions.py
 ├── models/
-│   ├── __init__.py
 │   ├── user.py
+│   ├── company.py
 │   ├── job.py
-│   ├── resume.py
-│   ├── saved_job.py
 │   └── application.py
 │
 ├── routes/
 │   ├── auth.py
+│   ├── company.py
 │   ├── jobs.py
-│   ├── resume.py
-│   ├── saved_jobs.py
-│   └── application.py
+│   ├── applications.py
+│   └── admin.py
 │
-└── migrations/
+├── utils/
+│   └── email_service.py
+│
+├── middleware/
+├── migrations/
+├── .env
+├── requirements.txt
+└── README.md
 ```
+
+---
+
+# ✨ Features Implemented
+
+## ✅ User Authentication
+
+* User Registration
+* User Login
+* Password Hashing
+* JWT Authentication
+* Protected Routes
+
+---
+
+## ✅ Role-Based Access Control (RBAC)
+
+* Admin
+* Employer
+* Job Seeker
+
+Each role has access only to authorized APIs.
+
+---
+
+## ✅ Company Management
+
+* Create Company
+* Update Company
+* Delete Company
+* View Company Details
+
+---
+
+## ✅ Job Management
+
+* Create Job
+* Update Job
+* Delete Job
+* View All Jobs
+* View Single Job
+
+---
+
+## ✅ Job Applications
+
+* Apply for Job
+* View Applied Jobs
+* Employer View Applications
+* Prevent Duplicate Applications
+
+---
+
+## ✅ Admin APIs
+
+* View All Users
+* View All Companies
+* View All Jobs
+* Manage Platform Data
+
+---
+
+## ✅ Email Integration
+
+* Welcome Email on Successful Registration
+* Gmail SMTP Configuration
+* Flask-Mail Integration
+
+---
+
+# 🔒 Security Features
+
+* Password Hashing
+* JWT Token Authentication
+* Role-Based Authorization
+* Environment Variables (.env)
+* Secure Email Configuration
+
+---
+
+# 🛠 Database
+
+* MySQL
+* SQLAlchemy ORM
+
+Main Tables:
+
+* Users
+* Companies
+* Jobs
+* Applications
+
+---
+
+# 📬 API Testing
+
+All APIs are tested using **Postman**.
+
+Example APIs:
+
+* Register User
+* Login User
+* Create Company
+* Create Job
+* Apply Job
+* View Applications
+* Admin Dashboard APIs
 
 ---
 
 # ⚙️ Installation
 
-Clone the repository
+Clone the repository:
 
 ```bash
 git clone https://github.com/Venumohan004/JobPortal.git
 ```
 
-Go to project folder
+Go to the project folder:
 
 ```bash
 cd JobPortal/backend
 ```
 
-Create virtual environment
+Create a virtual environment:
 
 ```bash
 python -m venv venv
 ```
 
-Activate virtual environment
+Activate the virtual environment:
 
 ### Windows
 
@@ -130,13 +185,33 @@ Activate virtual environment
 venv\Scripts\activate
 ```
 
-Install dependencies
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Run the Flask server
+Configure the `.env` file:
+
+```env
+SECRET_KEY=your_secret_key
+JWT_SECRET_KEY=your_jwt_secret
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=job_portal
+DB_USER=root
+DB_PASSWORD=your_password
+
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_DEFAULT_SENDER=your_email@gmail.com
+```
+
+Run the application:
 
 ```bash
 python app.py
@@ -144,114 +219,44 @@ python app.py
 
 ---
 
-# 🔑 Authentication
+# 📌 Current Progress
 
-This project uses **JWT (JSON Web Token)**.
-
-Protected APIs require:
-
-```
-Authorization: Bearer <JWT_TOKEN>
-```
-
----
-
-# 📮 Main APIs
-
-## Authentication
-
-* POST `/register`
-* POST `/login`
-* GET `/profile`
-
-## Jobs
-
-* POST `/jobs`
-* GET `/jobs`
-* PUT `/jobs/<id>`
-* DELETE `/jobs/<id>`
-* GET `/jobs/search`
-* GET `/jobs/company/<company>`
-* GET `/jobs/location/<location>`
-* GET `/jobs/salary/<salary>`
-* GET `/jobs/page`
-
-## Resume
-
-* POST `/resume`
-* GET `/resume`
-* PUT `/resume/<id>`
-* DELETE `/resume/<id>`
-
-## Saved Jobs
-
-* POST `/saved-jobs`
-* GET `/saved-jobs`
-* DELETE `/saved-jobs/<id>`
-
-## Applications
-
-* POST `/apply`
-* GET `/applications`
-* DELETE `/applications/<id>`
-* GET `/jobs/<job_id>/applications`
-* PUT `/applications/<id>/status`
+* ✅ Day 1 – Flask Project Setup
+* ✅ Day 2 – Database Configuration
+* ✅ Day 3 – User Model
+* ✅ Day 4 – User Registration
+* ✅ Day 5 – Login & JWT Authentication
+* ✅ Day 6 – CRUD APIs
+* ✅ Day 7 – Role-Based Access Control
+* ✅ Day 8 – Company Management
+* ✅ Day 9 – Job Management
+* ✅ Day 10 – Job Application System
+* ✅ Day 11 – Admin Dashboard APIs
+* ✅ Day 12 – Flask-Mail Setup
+* ✅ Day 13 – Welcome Email System
 
 ---
 
-# 🧪 Tested Using
+# 🚀 Upcoming Features
 
-* Postman
-* MySQL
-* Flask Development Server
-
----
-
-# 📚 What I Learned
-
-* Flask REST API Development
-* SQLAlchemy ORM
-* MySQL Database Integration
-* JWT Authentication
-* Role-Based Authorization
-* CRUD Operations
-* API Testing using Postman
-* Password Hashing using bcrypt
+* Forgot Password
+* Password Reset via Email
+* Email Verification
+* Resume Upload
+* Job Search & Filters
 * Pagination
-* Search & Filtering
-* Git & GitHub Workflow
-
----
-
-# 🚧 Project Status
-
-✅ Authentication Completed
-
-✅ Role-Based Authorization Completed
-
-✅ Job Management Completed
-
-✅ Resume Management Completed
-
-✅ Saved Jobs Completed
-
-✅ Job Application Management Completed
-
-🟡 Recruiter Dashboard (In Progress)
-
-🟡 Admin Dashboard (In Progress)
-
-🟡 Deployment (Pending)
+* API Documentation (Swagger)
+* Docker Support
+* Deployment
 
 ---
 
 # 👨‍💻 Author
 
-**Pilli Venumohan**
+**P Venumohan**
 
 * GitHub: https://github.com/Venumohan004
-* LinkedIn: https://linkedin.com/in/venumohan-p-522017346
 
 ---
 
-⭐ If you like this project, feel free to star the repository.
+## ⭐ If you like this project, don't forget to Star the repository!
