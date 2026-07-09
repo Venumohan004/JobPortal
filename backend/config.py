@@ -30,4 +30,14 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
 
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+    RESUME_FOLDER = os.path.join(UPLOAD_FOLDER, "resumes")
+    PROFILE_FOLDER = os.path.join(UPLOAD_FOLDER, "profile_images")
+
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB
+
+    
+
  

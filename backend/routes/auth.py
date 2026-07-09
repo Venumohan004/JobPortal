@@ -108,63 +108,43 @@ def register():
 # -------------------------------
 # Login API
 # -------------------------------
-@auth.route("/login", methods=["GET", "POST"])
+@auth.route("/login", methods=["POST"])
 def login():
+    try:
+        data = request.get_json()
 
-    if request.method == "GET":
+        print("Received:", data)
+
+        email = data.get("email")
+        password = data.get("password")
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            return jsonify({"message": "Invalid Email"}), 401
+
+        if not bcrypt.checkpw(
+            password.encode("utf-8"),
+            user.password.encode("utf-8")
+        ):
+            return jsonify({"message": "Invalid Password"}), 401
+
+        access_token = create_access_token(
+            identity=str(user.id),
+            additional_claims={
+                "email": user.email,
+                "role": user.role
+            }
+        )
+
         return jsonify({
-            "message": "Login API is working. Please use POST with JSON data."
-        })
+            "message": "Login Successful",
+            "token": access_token
+        }), 200
 
-    data = request.get_json(silent=True)
-
-    if not data:
-        return jsonify({
-            "message": "Please send JSON data with Content-Type: application/json"
-        }), 400
-
-    email = data.get("email")
-    password = data.get("password")
-
-    if not email or not password:
-        return jsonify({
-            "message": "Email and Password are required"
-        }), 400
-
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        return jsonify({
-            "message": "Invalid Email"
-        }), 401
-
-    if not bcrypt.checkpw(
-        password.encode("utf-8"),
-        user.password.encode("utf-8")
-    ):
-        return jsonify({
-            "message": "Invalid Password"
-        }), 401
-
-    access_token = create_access_token(
-    identity=str(user.id),
-    additional_claims={
-        "email": user.email,
-        "role": user.role
-    }
-)
-
-    return jsonify({
-        "message": "Login Successful",
-        "token": access_token,
-        "user": {
-            "id": user.id,
-            "name": user.full_name,
-            "email": user.email,
-            "phone": user.phone,
-            "role": user.role
-        }
-    }), 200
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({"error": str(e)}), 500
 
 @auth.route("/profile", methods=["GET"])
 @jwt_required()

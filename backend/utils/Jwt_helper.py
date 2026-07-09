@@ -12,3 +12,12 @@ def admin_required():
         return False
 
     return True
+
+ALLOWED_RESUME_EXTENSIONS = {"pdf"}
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
+
+def allowed_file(filename, allowed_extensions):
+    return (
+        "." in filename and
+        filename.rsplit(".", 1)[1].lower() in allowed_extensions
+    )

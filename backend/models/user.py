@@ -19,4 +19,10 @@ class User(db.Model):
         nullable=False
     )
 
+    resume = db.Column(db.String(255), nullable=True)
+    profile_image = db.Column(db.String(255), nullable=True)
+    phone = db.Column(db.String(20))
+    location = db.Column(db.String(100))
+    bio = db.Column(db.Text)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
