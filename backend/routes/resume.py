@@ -6,17 +6,13 @@ from werkzeug.utils import secure_filename
 
 from models import db
 from models.resume import Resume
+from models.user import User
+from utils.file_helper import allowed_file, IMAGE_EXTENSIONS, RESUME_EXTENSIONS 
+from config import Config
 
 resume_bp = Blueprint("resume", __name__)
 
-ALLOWED_RESUME_EXTENSIONS = {"pdf"}
-
-
-def allowed_file(filename):
-    return (
-        "." in filename and
-        filename.rsplit(".", 1)[1].lower() in ALLOWED_RESUME_EXTENSIONS
-    )
+ 
 
 
 @resume_bp.route("/upload/resume", methods=["POST"])
@@ -104,4 +100,47 @@ def delete_resume(id):
 
     return jsonify({
         "message": "Resume deleted successfully"
+    }), 200
+
+@resume_bp.route("/upload/profile-image", methods=["POST"])
+@jwt_required()
+def upload_profile_image():
+
+    user_id = get_jwt_identity()
+
+    if "image" not in request.files:
+        return jsonify({
+            "message": "No image uploaded"
+        }), 400
+
+    file = request.files["image"]
+
+    if file.filename == "":
+        return jsonify({
+            "message": "No selected file"
+        }), 400
+
+    if not allowed_file(file.filename, IMAGE_EXTENSIONS):
+        return jsonify({
+            "message": "Only JPG, JPEG and PNG are allowed"
+        }), 400
+
+    filename = secure_filename(file.filename)
+
+    filepath = os.path.join(
+        Config.PROFILE_FOLDER,
+        filename
+    )
+
+    file.save(filepath)
+
+    user = User.query.get(user_id)
+
+    user.profile_image = filename
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Profile image uploaded successfully",
+        "filename": filename
     }), 200
