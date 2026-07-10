@@ -9,7 +9,13 @@ class Job(db.Model):
     location = db.Column(db.String(100), nullable=False)
     salary = db.Column(db.Integer)
     description = db.Column(db.Text)
-    created_by = db.Column(db.Integer, nullable=False)
+    created_by = db.Column(
+    db.Integer,
+    db.ForeignKey("users.id"),
+    nullable=False
+    )
+
+    user = db.relationship("User", backref="jobs")
 
     def to_dict(self):
         return {

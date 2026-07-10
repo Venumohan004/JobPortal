@@ -3,6 +3,7 @@ from models import db
 from models.job import Job
 from flask_jwt_extended import jwt_required, get_jwt
 from flask_jwt_extended import get_jwt_identity
+ 
 
 jobs_bp = Blueprint("jobs", __name__)
 @jobs_bp.route("/jobs", methods=["POST"])
@@ -18,7 +19,6 @@ def create_job():
             }), 403
             
         data = request.get_json()
-        print("Received Data:", data)
 
         job = Job(
             title=data["title"],
@@ -26,7 +26,7 @@ def create_job():
             location=data["location"],
             salary=data["salary"],
             description=data["description"],
-            created_by=get_jwt_identity()
+            created_by=int(get_jwt_identity())
         )
 
         db.session.add(job)
@@ -50,7 +50,7 @@ def get_jobs():
 
     company = request.args.get("company")
     location = request.args.get("location")
-    title = request.args.get("title")
+    title = request.args.get("title", "")
     min_salary = request.args.get("min_salary", type=int)
     sort = request.args.get("sort")
 
@@ -107,15 +107,20 @@ def update_job(id):
         return jsonify({
             "message": "Job not found"
         }), 404
+    
+    if job.created_by != int(get_jwt_identity()):
+        return jsonify({
+        "message": "You can update only your own jobs"
+    }), 403
 
     data = request.get_json()
 
-    job.title = data["title"]
-    job.company = data["company"]
-    job.location = data["location"]
-    job.salary = data["salary"]
-    job.description = data["description"]
-    job.created_by = data["created_by"]
+    job.title = data.get("title", job.title)
+    job.company = data.get("company", job.company)
+    job.location = data.get("location", job.location)
+    job.salary = data.get("salary", job.salary)
+    job.description = data.get("description", job.description)
+     
 
     db.session.commit()
 
@@ -140,6 +145,11 @@ def delete_job(id):
         return jsonify({
             "message": "Job not found"
         }), 404
+    
+    if job.created_by != int(get_jwt_identity()):
+        return jsonify({
+        "message": "You can delete only your own jobs"
+    }), 403
 
     db.session.delete(job)
     db.session.commit()
@@ -150,7 +160,7 @@ def delete_job(id):
 
 @jobs_bp.route("/jobs/search", methods=["GET"])
 def search_jobs():
-    title = request.args.get("title")
+    title = request.args.get("title", "")
 
     jobs = Job.query.filter(
         Job.title.ilike(f"%{title}%")
@@ -220,7 +230,7 @@ def my_jobs():
             "message": "Only recruiters can view their jobs"
         }), 403
 
-    recruiter_id = get_jwt_identity()
+    recruiter_id = int(get_jwt_identity())
 
     jobs = Job.query.filter_by(created_by=recruiter_id).all()
 

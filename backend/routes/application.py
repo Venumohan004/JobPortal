@@ -2,13 +2,13 @@ from flask import Blueprint, request, jsonify
 from models import db
 from models.application import Application
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from models.job import Job
 
 application_bp = Blueprint("application", __name__)
 
-@application_bp.route("/apply", methods=["POST"])
+@application_bp.route("/jobs/<int:job_id>/apply", methods=["POST"])
 @jwt_required()
-def apply_job():
-    data = request.get_json()
+def apply_job(job_id):
 
     claims = get_jwt()
 
@@ -19,9 +19,16 @@ def apply_job():
 
     candidate_id = int(get_jwt_identity())
 
+    job = Job.query.get(job_id)
+
+    if not job:
+        return jsonify({
+        "message": "Job not found"
+    }), 404
+
     existing_application = Application.query.filter_by(
     candidate_id= candidate_id,
-    job_id=data["job_id"]
+    job_id=job_id
     ).first()
 
     if existing_application:
@@ -31,7 +38,7 @@ def apply_job():
 
     application = Application(
         candidate_id=candidate_id,
-        job_id=data["job_id"]
+        job_id=job_id
     )
 
     db.session.add(application)
@@ -47,7 +54,7 @@ def apply_job():
 def get_applications():
 
     claims = get_jwt()
-    print(claims)
+    
 
     if claims["role"] not in ["recruiter", "admin"]:
         return jsonify({
@@ -79,11 +86,6 @@ def delete_application(id):
             "message": "Access denied"
         }), 403
 
-    if not application:
-        return jsonify({
-            "message": "Application not found"
-        }), 404
-
     db.session.delete(application)
     db.session.commit()
 
@@ -101,6 +103,19 @@ def get_job_applications(job_id):
         return jsonify({
             "message": "Only recruiters can view job applications"
         }), 403
+    recruiter_id = int(get_jwt_identity())
+
+    job = Job.query.get(job_id)
+
+    if not job:
+        return jsonify({
+        "message": "Job not found"
+    }), 404
+
+    if job.created_by != recruiter_id:
+        return jsonify({
+        "message": "You can view applications only for your own jobs"
+    }), 403
 
     applications = Application.query.filter_by(job_id=job_id).all()
 
@@ -121,6 +136,7 @@ def update_application_status(id):
             "message": "Only recruiters can update application status"
         }), 403
 
+    # First fetch application
     application = Application.query.get(id)
 
     if not application:
@@ -128,7 +144,27 @@ def update_application_status(id):
             "message": "Application not found"
         }), 404
 
+    # Then fetch job
+    job = Job.query.get(application.job_id)
+
+    if job.created_by != int(get_jwt_identity()):
+        return jsonify({
+            "message": "You can update only applications for your own jobs"
+        }), 403
+
     data = request.get_json()
+
+    allowed_status = [
+        "Applied",
+        "Shortlisted",
+        "Rejected",
+        "Selected"
+    ]
+
+    if data["status"] not in allowed_status:
+        return jsonify({
+            "message": "Invalid status"
+        }), 400
 
     application.status = data["status"]
 

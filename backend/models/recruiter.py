@@ -8,7 +8,16 @@ class Recruiter(db.Model):
     company_email = db.Column(db.String(120), unique=True, nullable=False)
     company_location = db.Column(db.String(100))
     company_website = db.Column(db.String(150))
-    user_id = db.Column(db.Integer, nullable=False)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=False,
+        unique=True
+    )
+
+    # Add this here
+    user = db.relationship("User", backref="recruiter")
 
     def to_dict(self):
         return {
