@@ -25,4 +25,4 @@ class User(db.Model):
     location = db.Column(db.String(100))
     bio = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  

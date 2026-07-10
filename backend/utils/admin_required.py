@@ -8,9 +8,13 @@ def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
 
-        current_user = get_jwt_identity()
+        current_user = int(get_jwt_identity())
 
         user = User.query.get(current_user)
+
+        print("JWT Identity:", current_user)
+        print("User:", user)
+        print("Role:", user.role if user else None)
 
         if not user:
             return jsonify({"message":"User not found"}),404

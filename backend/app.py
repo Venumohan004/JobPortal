@@ -16,9 +16,10 @@ from routes.jobs import jobs_bp
 from routes.application import application_bp
 from routes.resume import resume_bp
 from routes.saved_jobs import saved_bp
-from routes.admin_routes import admin_bp
-from utils.email_service import mail
  
+from utils.email_service import mail
+from routes.admin import admin_bp
+
 app = Flask(__name__)
 
 app.config.from_object(Config)
@@ -38,7 +39,7 @@ app.register_blueprint(jobs_bp)
 app.register_blueprint(application_bp)
 app.register_blueprint(resume_bp)
 app.register_blueprint(saved_bp)
-app.register_blueprint(admin_bp, url_prefix="/admin")
+app.register_blueprint(admin_bp)
 
 @app.route("/")
 def home():
