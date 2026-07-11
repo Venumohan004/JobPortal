@@ -3,7 +3,7 @@ from models import db
 from models.job import Job
 from flask_jwt_extended import jwt_required, get_jwt
 from flask_jwt_extended import get_jwt_identity
- 
+from sqlalchemy import or_
 
 jobs_bp = Blueprint("jobs", __name__)
 @jobs_bp.route("/jobs", methods=["POST"])
@@ -45,16 +45,30 @@ def create_job():
 @jobs_bp.route("/jobs", methods=["GET"])
 def get_jobs():
 
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 5, type=int)
-
+    search = request.args.get("search")
     company = request.args.get("company")
     location = request.args.get("location")
     title = request.args.get("title", "")
+
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 5, type=int)
+
     min_salary = request.args.get("min_salary", type=int)
+    max_salary = request.args.get("max_salary", type=int)
+
     sort = request.args.get("sort")
 
     query = Job.query
+
+    if search:
+        query = query.filter(
+            or_(
+                Job.title.ilike(f"%{search}%"),
+                Job.company.ilike(f"%{search}%"),
+                Job.location.ilike(f"%{search}%"),
+                Job.description.ilike(f"%{search}%")
+            )
+        )
 
     if company:
         query = query.filter(Job.company.ilike(f"%{company}%"))
@@ -68,12 +82,21 @@ def get_jobs():
     if min_salary:
         query = query.filter(Job.salary >= min_salary)
 
+    if max_salary:
+        query = query.filter(Job.salary <= max_salary)
+
     if sort == "salary_asc":
         query = query.order_by(Job.salary.asc())
+
     elif sort == "salary_desc":
         query = query.order_by(Job.salary.desc())
+
     elif sort == "latest":
         query = query.order_by(Job.id.desc())
+
+    elif sort == "oldest":
+        query = query.order_by(Job.id.asc())
+
     elif sort == "title":
         query = query.order_by(Job.title.asc())
 
