@@ -3,6 +3,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from models import db
 from models.candidate import Candidate
+from models.application import Application
+from models.saved_job import SavedJob
 
 candidate = Blueprint("candidate", __name__)
 
@@ -93,3 +95,67 @@ def update_profile():
     return jsonify({
         "message": "Candidate profile updated successfully"
     })
+
+@candidate.route("/candidate/dashboard", methods=["GET"])
+@jwt_required()
+def candidate_dashboard():
+
+    user_id = int(get_jwt_identity())
+
+    applied_jobs = Application.query.filter_by(candidate_id=user_id).count()
+
+    saved_jobs = SavedJob.query.filter_by(candidate_id=user_id).count()
+
+    return jsonify({
+        "applied_jobs": applied_jobs,
+        "saved_jobs": saved_jobs
+    }), 200
+
+@candidate.route("/candidate/recent-applications", methods=["GET"])
+@jwt_required()
+def recent_applications():
+
+    user_id = int(get_jwt_identity())
+
+    applications = (
+        Application.query
+        .filter_by(candidate_id=user_id)
+        .order_by(Application.id.desc())
+        .limit(5)
+        .all()
+    )
+
+    return jsonify({
+        "applications": [
+            application.to_dict()
+            for application in applications
+        ]
+    }), 200
+
+@candidate.route("/candidate/application-status", methods=["GET"])
+@jwt_required()
+def application_status():
+
+    user_id = int(get_jwt_identity())
+
+    applied = Application.query.filter_by(
+    candidate_id=user_id,
+    status="Applied"
+    ).count()
+
+    accepted = Application.query.filter_by(
+    candidate_id=user_id,
+    status="Accepted"
+    ).count()
+
+    rejected = Application.query.filter_by(
+    candidate_id=user_id,
+    status="Rejected"
+    ).count()
+
+    return jsonify({
+    "applied": applied,
+    "accepted": accepted,
+    "rejected": rejected
+    }), 200
+
