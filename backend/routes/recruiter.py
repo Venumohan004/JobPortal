@@ -1,9 +1,11 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 from models import db
 from models.recruiter import Recruiter
 from models.user import User
+from models.job import Job
+from models.application import Application
 
 recruiter_bp = Blueprint("recruiter", __name__)
 
@@ -89,4 +91,79 @@ def update_recruiter_profile():
     return jsonify({
         "message": "Recruiter profile updated successfully",
         "recruiter": recruiter.to_dict()
+    }), 200
+
+@recruiter_bp.route("/recruiter/dashboard", methods=["GET"])
+@jwt_required()
+def recruiter_dashboard():
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can access dashboard"
+        }), 403
+
+    recruiter_id = int(get_jwt_identity())
+
+    total_jobs = Job.query.filter_by(created_by=recruiter_id).count()
+
+    job_ids = [
+        job.id
+        for job in Job.query.filter_by(created_by=recruiter_id).all()
+    ]
+
+    total_applications = Application.query.filter(
+        Application.job_id.in_(job_ids)
+    ).count()
+
+    return jsonify({
+        "total_jobs": total_jobs,
+        "total_applications": total_applications
+    }), 200
+
+@recruiter_bp.route("/recruiter/jobs/applications", methods=["GET"])
+@jwt_required()
+def applications_per_job():
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can access"
+        }), 403
+
+    recruiter_id = int(get_jwt_identity())
+
+    jobs = Job.query.filter_by(created_by=recruiter_id).all()
+
+    result = []
+
+    for job in jobs:
+
+        count = Application.query.filter_by(
+            job_id=job.id
+        ).count()
+
+        result.append({
+            "job_id": job.id,
+            "title": job.title,
+            "company": job.company,
+            "applications": count
+        })
+
+    return jsonify(result), 200
+
+@recruiter_bp.route("/recruiter/recent-jobs", methods=["GET"])
+@jwt_required()
+def recent_jobs():
+
+    recruiter_id = int(get_jwt_identity())
+
+    jobs = Job.query.filter_by(
+        created_by=recruiter_id
+    ).order_by(Job.id.desc()).limit(5).all()
+
+    return jsonify({
+        "jobs": [job.to_dict() for job in jobs]
     }), 200
