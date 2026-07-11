@@ -124,7 +124,7 @@ def update_job(id):
             "message": "Only recruiters can update jobs"
         }), 403
 
-    job = Job.query.get(id)
+    job = db.session.get(Job, id)
 
     if not job:
         return jsonify({
@@ -162,7 +162,7 @@ def delete_job(id):
             "message": "Only recruiters can delete jobs"
         }), 403
 
-    job = Job.query.get(id)
+    job = db.session.get(Job, id)
 
     if not job:
         return jsonify({
@@ -183,10 +183,16 @@ def delete_job(id):
 
 @jobs_bp.route("/jobs/search", methods=["GET"])
 def search_jobs():
-    title = request.args.get("title", "")
+
+    search = request.args.get("search", "")
 
     jobs = Job.query.filter(
-        Job.title.ilike(f"%{title}%")
+        or_(
+            Job.title.ilike(f"%{search}%"),
+            Job.company.ilike(f"%{search}%"),
+            Job.location.ilike(f"%{search}%"),
+            Job.description.ilike(f"%{search}%")
+        )
     ).all()
 
     return jsonify({
@@ -260,4 +266,26 @@ def my_jobs():
     return jsonify({
         "count": len(jobs),
         "jobs": [job.to_dict() for job in jobs]
+    }), 200
+
+
+@jobs_bp.route("/jobs/filter", methods=["GET"])
+def filter_jobs():
+
+    company = request.args.get("company")
+    location = request.args.get("location")
+
+    query = Job.query
+
+    if company:
+        query = query.filter(Job.company.ilike(f"%{company}%"))
+
+    if location:
+        query = query.filter(Job.location.ilike(f"%{location}%"))
+
+    jobs = query.all()
+
+    return jsonify({
+        "count": len(jobs),
+       "jobs": [job.to_dict() for job in jobs]
     }), 200
