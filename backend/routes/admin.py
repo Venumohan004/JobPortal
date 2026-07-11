@@ -7,6 +7,8 @@ from models.job import Job
 from models.application import Application
 from models.candidate import Candidate
 from models.recruiter import Recruiter
+from sqlalchemy import func
+from datetime import datetime, timedelta
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -170,4 +172,176 @@ def admin_dashboard():
 
         "latest_applications": applications
 
+    }), 200
+
+# ==========================
+# Application Status Report
+# ==========================
+@admin_bp.route("/admin/reports/applications", methods=["GET"])
+@jwt_required()
+def application_report():
+
+    admin_id = int(get_jwt_identity())
+    admin = db.session.get(User, admin_id)
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    report = (
+        db.session.query(
+            Application.status,
+            func.count(Application.id)
+        )
+        .group_by(Application.status)
+        .all()
+    )
+
+    data = {}
+
+    for status, count in report:
+        data[status] = count
+
+    return jsonify(data), 200
+
+# ==========================
+# Jobs Posted Per Recruiter
+# ==========================
+@admin_bp.route("/admin/reports/recruiters", methods=["GET"])
+@jwt_required()
+def recruiter_report():
+
+    admin_id = int(get_jwt_identity())
+    admin = db.session.get(User, admin_id)
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    report = (
+        db.session.query(
+            Recruiter.company_name,
+            func.count(Job.id).label("jobs_posted")
+        )
+        .join(Job, Recruiter.user_id == Job.created_by)
+        .group_by(Recruiter.company_name)
+        .all()
+    )
+
+    data = []
+
+    for company, jobs in report:
+        data.append({
+            "company": company,
+            "jobs_posted": jobs
+        })
+
+    return jsonify(data), 200
+
+# ==========================
+# Top Recruiters
+# ==========================
+@admin_bp.route("/admin/reports/top-recruiters", methods=["GET"])
+@jwt_required()
+def top_recruiters():
+
+    admin_id = int(get_jwt_identity())
+    admin = db.session.get(User, admin_id)
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    report = (
+        db.session.query(
+            Recruiter.company_name,
+            func.count(Job.id).label("jobs")
+        )
+        .join(Job, Recruiter.user_id == Job.created_by)
+        .group_by(Recruiter.company_name)
+        .order_by(func.count(Job.id).desc())
+        .limit(5)
+        .all()
+    )
+
+    data = []
+
+    for company, jobs in report:
+        data.append({
+            "company": company,
+            "jobs": jobs
+        })
+
+    return jsonify(data), 200
+
+# ==========================
+# Most Applied Jobs
+# ==========================
+@admin_bp.route("/admin/reports/top-jobs", methods=["GET"])
+@jwt_required()
+def top_jobs():
+
+    admin_id = int(get_jwt_identity())
+    admin = db.session.get(User, admin_id)
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    report = (
+        db.session.query(
+            Job.title,
+            func.count(Application.id).label("applications")
+        )
+        .join(Application, Job.id == Application.job_id)
+        .group_by(Job.title)
+        .order_by(func.count(Application.id).desc())
+        .limit(5)
+        .all()
+    )
+
+    data = []
+
+    for title, applications in report:
+        data.append({
+            "job": title,
+            "applications": applications
+        })
+
+    return jsonify(data), 200
+
+# ==========================
+# Candidate Registration Report
+# ==========================
+@admin_bp.route("/admin/reports/candidates", methods=["GET"])
+@jwt_required()
+def candidate_report():
+
+    admin_id = int(get_jwt_identity())
+    admin = db.session.get(User, admin_id)
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    now = datetime.utcnow()
+
+    today_start = datetime(now.year, now.month, now.day)
+    week_start = now - timedelta(days=7)
+    month_start = now - timedelta(days=30)
+
+    today = User.query.filter(
+        User.role == "candidate",
+        User.created_at >= today_start
+    ).count()
+
+    this_week = User.query.filter(
+        User.role == "candidate",
+        User.created_at >= week_start
+    ).count()
+
+    this_month = User.query.filter(
+        User.role == "candidate",
+        User.created_at >= month_start
+    ).count()
+
+    return jsonify({
+        "today": today,
+        "this_week": this_week,
+        "this_month": this_month
     }), 200
