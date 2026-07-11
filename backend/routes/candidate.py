@@ -5,7 +5,9 @@ from models import db
 from models.candidate import Candidate
 from models.application import Application
 from models.saved_job import SavedJob
-
+from models.job import Job
+from models.recently_viewed_job import RecentlyViewedJob
+ 
 candidate = Blueprint("candidate", __name__)
 
 
@@ -159,3 +161,51 @@ def application_status():
     "rejected": rejected
     }), 200
 
+@candidate.route("/candidate/saved-jobs", methods=["GET"])
+@jwt_required()
+def get_saved_jobs():
+
+    user_id = int(get_jwt_identity())
+
+    saved_jobs = (
+        db.session.query(Job)
+        .join(SavedJob, Job.id == SavedJob.job_id)
+        .filter(SavedJob.candidate_id == user_id)
+        .all()
+    )
+
+    return jsonify({
+        "count": len(saved_jobs),
+        "jobs": [job.to_dict() for job in saved_jobs]
+    }), 200
+
+@candidate.route("/candidate/recent-jobs", methods=["GET"])
+@jwt_required()
+def recent_jobs():
+
+    user_id = int(get_jwt_identity())
+
+
+    viewed_jobs = (
+        RecentlyViewedJob.query
+        .filter_by(candidate_id=user_id)
+        .order_by(RecentlyViewedJob.id.desc())
+        .limit(5)
+        .all()
+    )
+
+
+    jobs = []
+
+    for viewed in viewed_jobs:
+
+        job = db.session.get(Job, viewed.job_id)
+
+        if job:
+            jobs.append(job.to_dict())
+
+
+    return jsonify({
+        "count": len(jobs),
+        "recent_jobs": jobs
+    }),200

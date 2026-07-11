@@ -4,6 +4,8 @@ from models.job import Job
 from flask_jwt_extended import jwt_required, get_jwt
 from flask_jwt_extended import get_jwt_identity
 from sqlalchemy import or_
+from models.saved_job import SavedJob
+from models.recently_viewed_job import RecentlyViewedJob
 
 jobs_bp = Blueprint("jobs", __name__)
 @jobs_bp.route("/jobs", methods=["POST"])
@@ -114,44 +116,7 @@ def get_jobs():
         "jobs": [job.to_dict() for job in pagination.items]
     }), 200
 
-@jobs_bp.route("/jobs/<int:id>", methods=["PUT"])
-@jwt_required()
-def update_job(id):
-    claims = get_jwt()
-
-    if claims["role"] != "recruiter":
-        return jsonify({
-            "message": "Only recruiters can update jobs"
-        }), 403
-
-    job = db.session.get(Job, id)
-
-    if not job:
-        return jsonify({
-            "message": "Job not found"
-        }), 404
-    
-    if job.created_by != int(get_jwt_identity()):
-        return jsonify({
-        "message": "You can update only your own jobs"
-    }), 403
-
-    data = request.get_json()
-
-    job.title = data.get("title", job.title)
-    job.company = data.get("company", job.company)
-    job.location = data.get("location", job.location)
-    job.salary = data.get("salary", job.salary)
-    job.description = data.get("description", job.description)
-     
-
-    db.session.commit()
-
-    return jsonify({
-        "message": "Job Updated Successfully",
-        "job": job.to_dict()
-    }), 200
-
+ 
 @jobs_bp.route("/jobs/<int:id>", methods=["DELETE"])
 @jwt_required()
 def delete_job(id):
@@ -289,3 +254,113 @@ def filter_jobs():
         "count": len(jobs),
        "jobs": [job.to_dict() for job in jobs]
     }), 200
+
+@jobs_bp.route("/jobs/<int:job_id>/save", methods=["POST"])
+@jwt_required()
+def save_job(job_id):
+
+    claims = get_jwt()
+
+    if claims["role"] != "candidate":
+        return jsonify({
+            "message": "Only candidates can save jobs"
+        }), 403
+
+    candidate_id = int(get_jwt_identity())
+
+    job = db.session.get(Job, job_id)
+
+    if not job:
+        return jsonify({
+            "message": "Job not found"
+        }), 404
+
+    existing = SavedJob.query.filter_by(
+        candidate_id=candidate_id,
+        job_id=job_id
+    ).first()
+
+    if existing:
+        return jsonify({
+            "message": "Job already saved"
+        }), 400
+
+    saved = SavedJob(
+        candidate_id=candidate_id,
+        job_id=job_id
+    )
+
+    db.session.add(saved)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Job saved successfully"
+    }), 201
+
+@jobs_bp.route("/jobs/<int:job_id>/save", methods=["DELETE"])
+@jwt_required()
+def remove_saved_job(job_id):
+
+    claims = get_jwt()
+
+    if claims["role"] != "candidate":
+        return jsonify({
+            "message": "Only candidates can remove saved jobs"
+        }), 403
+
+    candidate_id = int(get_jwt_identity())
+
+    saved_job = SavedJob.query.filter_by(
+        candidate_id=candidate_id,
+        job_id=job_id
+    ).first()
+
+    if not saved_job:
+        return jsonify({
+            "message": "Saved job not found"
+        }), 404
+
+    db.session.delete(saved_job)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Saved job removed successfully"
+    }), 200
+
+@jobs_bp.route("/jobs/<int:id>", methods=["GET"])
+@jwt_required()
+def get_single_job(id):
+
+    job = db.session.get(Job, id)
+
+    if not job:
+        return jsonify({
+            "message": "Job not found"
+        }), 404
+
+
+    claims = get_jwt()
+
+    # Only candidates should get recent viewed history
+    if claims["role"] == "candidate":
+
+        candidate_id = int(get_jwt_identity())
+
+        existing = RecentlyViewedJob.query.filter_by(
+            candidate_id=candidate_id,
+            job_id=id
+        ).first()
+
+
+        if not existing:
+
+            viewed_job = RecentlyViewedJob(
+                candidate_id=candidate_id,
+                job_id=id
+            )
+
+            db.session.add(viewed_job)
+            db.session.commit()
+
+
+    return jsonify(job.to_dict()), 200

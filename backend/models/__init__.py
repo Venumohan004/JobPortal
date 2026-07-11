@@ -7,3 +7,4 @@ from .job import Job
 from .application import Application
 from .recruiter import Recruiter
 from .candidate import Candidate
+from models.recently_viewed_job import RecentlyViewedJob
