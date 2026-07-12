@@ -6,9 +6,11 @@ from models.recruiter import Recruiter
 from models.user import User
 from models.job import Job
 from models.application import Application
+from services.recommendation import calculate_match
+from models.candidate import Candidate
 
 recruiter_bp = Blueprint("recruiter", __name__)
-
+ 
 @recruiter_bp.route("/recruiter/profile", methods=["POST"])
 @jwt_required()
 def create_recruiter():
@@ -166,4 +168,46 @@ def recent_jobs():
 
     return jsonify({
         "jobs": [job.to_dict() for job in jobs]
+    }), 200
+
+@recruiter_bp.route("/recruiter/jobs/<int:job_id>/recommended-candidates", methods=["GET"])
+@jwt_required()
+def recommended_candidates(job_id):
+    user_id = int(get_jwt_identity())
+
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+    recruiter = Recruiter.query.filter_by(user_id=user.id).first()
+
+    if not recruiter:
+        return jsonify({"message": "Recruiter profile not found"}), 404
+    job = Job.query.get(job_id)
+
+    if not job:
+        return jsonify({"message": "Job not found"}), 404 
+    
+    if job.created_by != user_id:
+        return jsonify({"message": "Unauthorized"}), 403 
+    
+    candidates = Candidate.query.all()
+
+    recommendations = []
+
+    for candidate in candidates:
+
+        score = calculate_match(job, candidate)
+
+        recommendations.append({
+        "candidate_id": candidate.id,
+        "score": score
+        })
+
+    recommendations.sort(
+        key=lambda x: x["score"],
+        reverse=True
+    )
+    return jsonify({
+            "recommended_candidates": recommendations
     }), 200

@@ -7,11 +7,13 @@ from models.application import Application
 from models.saved_job import SavedJob
 from models.job import Job
 from models.recently_viewed_job import RecentlyViewedJob
- 
+
 candidate = Blueprint("candidate", __name__)
 
 
+# ===========================
 # Create Candidate Profile
+# ===========================
 @candidate.route("/candidate/profile", methods=["POST"])
 @jwt_required()
 def create_profile():
@@ -44,7 +46,10 @@ def create_profile():
         "message": "Candidate Profile Created Successfully"
     }), 201
 
+
+# ===========================
 # Get Candidate Profile
+# ===========================
 @candidate.route("/candidate/profile", methods=["GET"])
 @jwt_required()
 def get_profile():
@@ -58,18 +63,12 @@ def get_profile():
             "message": "Profile not found"
         }), 404
 
-    return jsonify({
-        "id": profile.id,
-        "skills": profile.skills,
-        "education": profile.education,
-        "experience": profile.experience,
-        "address": profile.address,
-        "about": profile.about,
-        "location": profile.location
-    })
+    return jsonify(profile.to_dict()), 200
 
 
+# ===========================
 # Update Candidate Profile
+# ===========================
 @candidate.route("/candidate/profile", methods=["PUT"])
 @jwt_required()
 def update_profile():
@@ -96,23 +95,37 @@ def update_profile():
 
     return jsonify({
         "message": "Candidate profile updated successfully"
-    })
+    }), 200
 
+
+# ===========================
+# Candidate Dashboard
+# ===========================
 @candidate.route("/candidate/dashboard", methods=["GET"])
 @jwt_required()
 def candidate_dashboard():
 
     user_id = int(get_jwt_identity())
 
-    applied_jobs = Application.query.filter_by(candidate_id=user_id).count()
+    print("Dashboard User ID:", user_id)
 
-    saved_jobs = SavedJob.query.filter_by(candidate_id=user_id).count()
+    applied_jobs = Application.query.filter_by(
+        candidate_id=user_id
+    ).count()
+
+    saved_jobs = SavedJob.query.filter_by(
+        candidate_id=user_id
+    ).count()
 
     return jsonify({
         "applied_jobs": applied_jobs,
         "saved_jobs": saved_jobs
     }), 200
 
+
+# ===========================
+# Recent Applications
+# ===========================
 @candidate.route("/candidate/recent-applications", methods=["GET"])
 @jwt_required()
 def recent_applications():
@@ -128,46 +141,63 @@ def recent_applications():
     )
 
     return jsonify({
+        "count": len(applications),
         "applications": [
             application.to_dict()
             for application in applications
         ]
     }), 200
 
+
+# ===========================
+# Application Status
+# ===========================
 @candidate.route("/candidate/application-status", methods=["GET"])
 @jwt_required()
 def application_status():
 
     user_id = int(get_jwt_identity())
 
+    print("Status User ID:", user_id)
+
     applied = Application.query.filter_by(
-    candidate_id=user_id,
-    status="Applied"
+        candidate_id=user_id,
+        status="Applied"
     ).count()
 
-    accepted = Application.query.filter_by(
-    candidate_id=user_id,
-    status="Accepted"
+    shortlisted = Application.query.filter_by(
+        candidate_id=user_id,
+        status="Shortlisted"
+    ).count()
+
+    selected = Application.query.filter_by(
+        candidate_id=user_id,
+        status="Selected"
     ).count()
 
     rejected = Application.query.filter_by(
-    candidate_id=user_id,
-    status="Rejected"
+        candidate_id=user_id,
+        status="Rejected"
     ).count()
 
     return jsonify({
-    "applied": applied,
-    "accepted": accepted,
-    "rejected": rejected
+        "applied": applied,
+        "shortlisted": shortlisted,
+        "selected": selected,
+        "rejected": rejected
     }), 200
 
+
+# ===========================
+# Saved Jobs
+# ===========================
 @candidate.route("/candidate/saved-jobs", methods=["GET"])
 @jwt_required()
 def get_saved_jobs():
 
     user_id = int(get_jwt_identity())
 
-    saved_jobs = (
+    jobs = (
         db.session.query(Job)
         .join(SavedJob, Job.id == SavedJob.job_id)
         .filter(SavedJob.candidate_id == user_id)
@@ -175,16 +205,19 @@ def get_saved_jobs():
     )
 
     return jsonify({
-        "count": len(saved_jobs),
-        "jobs": [job.to_dict() for job in saved_jobs]
+        "count": len(jobs),
+        "jobs": [job.to_dict() for job in jobs]
     }), 200
 
+
+# ===========================
+# Recently Viewed Jobs
+# ===========================
 @candidate.route("/candidate/recent-jobs", methods=["GET"])
 @jwt_required()
 def recent_jobs():
 
     user_id = int(get_jwt_identity())
-
 
     viewed_jobs = (
         RecentlyViewedJob.query
@@ -194,18 +227,15 @@ def recent_jobs():
         .all()
     )
 
-
     jobs = []
 
     for viewed in viewed_jobs:
-
         job = db.session.get(Job, viewed.job_id)
 
         if job:
             jobs.append(job.to_dict())
 
-
     return jsonify({
         "count": len(jobs),
         "recent_jobs": jobs
-    }),200
+    }), 200

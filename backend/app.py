@@ -20,6 +20,8 @@ from routes.saved_jobs import saved_bp
 from utils.email_service import mail
 from routes.admin import admin_bp
 
+from utils.email import mail
+
 app = Flask(__name__)
 
 app.config.from_object(Config)

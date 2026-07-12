@@ -28,6 +28,8 @@ def create_job():
             location=data["location"],
             salary=data["salary"],
             description=data["description"],
+            skills=data.get("skills"),
+            experience=data.get("experience"),
             created_by=int(get_jwt_identity())
         )
 

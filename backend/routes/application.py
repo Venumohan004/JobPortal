@@ -3,6 +3,8 @@ from models import db
 from models.application import Application
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from models.job import Job
+from models import User
+from utils.email import send_email
 
 application_bp = Blueprint("application", __name__)
 
@@ -43,6 +45,30 @@ def apply_job(job_id):
 
     db.session.add(application)
     db.session.commit()
+
+    job = Job.query.get(job_id)
+
+    recruiter = User.query.get(job.created_by)
+
+    candidate = User.query.get(candidate_id)
+
+    send_email(
+        subject="New Job Application",
+        recipients=[recruiter.email],
+        body=f"""
+        Hello Recruiter,
+
+        A new candidate has applied.
+
+        Candidate:
+        {candidate.name}
+
+        Job:
+        {job.title}
+
+        Please login to review the application.
+        """
+        )
 
     return jsonify({
         "message": "Job Applied Successfully",
@@ -170,7 +196,29 @@ def update_application_status(id):
 
     db.session.commit()
 
+    candidate = User.query.get(application.candidate_id)
+
+    job = Job.query.get(application.job_id)
+
+    send_email (
+            subject="Application Status Updated",
+            recipients=[candidate.email],
+            body=f"""
+                Hello Recruiter,
+
+                A new candidate has applied.
+
+                Candidate:
+                {candidate.full_name}
+
+                Job:
+                {job.title}
+
+                Please login to review the application.
+                """
+            )
     return jsonify({
-        "message": "Application status updated successfully",
-        "application": application.to_dict()
-    }), 200
+            "message": "Application status updated successfully",
+            "application": application.to_dict()
+         }), 200
+    
