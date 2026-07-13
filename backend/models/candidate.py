@@ -15,3 +15,15 @@ class Candidate(db.Model):
     location = db.Column(db.String(100))
 
     user = db.relationship("User", backref="candidate", lazy=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "skills": self.skills,
+            "education": self.education,
+            "experience": self.experience,
+            "address": self.address,
+            "about": self.about,
+            "location": self.location
+        }

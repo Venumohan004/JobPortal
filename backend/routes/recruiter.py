@@ -169,6 +169,32 @@ def recent_jobs():
     return jsonify({
         "jobs": [job.to_dict() for job in jobs]
     }), 200
+@recruiter_bp.route("/recruiter/jobs/<int:job_id>/applications", methods=["GET"])
+@jwt_required()
+def recruiter_job_applications(job_id):
+
+    user_id = int(get_jwt_identity())
+
+    job = Job.query.get(job_id)
+
+    if not job:
+        return jsonify({"message": "Job not found"}), 404
+
+    if job.created_by != user_id:
+        return jsonify({"message": "Unauthorized"}), 403
+
+    applications = Application.query.filter_by(job_id=job_id).all()
+
+    result = []
+
+    for application in applications:
+        result.append({
+            "application_id": application.id,
+            "candidate_id": application.candidate_id,
+            "status": application.status
+        })
+
+    return jsonify(result), 200
 
 @recruiter_bp.route("/recruiter/jobs/<int:job_id>/recommended-candidates", methods=["GET"])
 @jwt_required()
@@ -210,4 +236,115 @@ def recommended_candidates(job_id):
     )
     return jsonify({
             "recommended_candidates": recommendations
+    }), 200
+
+@recruiter_bp.route("/recruiter/candidates", methods=["GET"])
+@jwt_required()
+def search_candidates():
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({"message": "Only recruiters can access"}), 403
+
+    query = Candidate.query
+
+    skill = request.args.get("skill")
+    location = request.args.get("location")
+    experience = request.args.get("experience")
+    education = request.args.get("education")
+
+    if skill:
+        query = query.filter(Candidate.skills.ilike(f"%{skill}%"))
+
+    if location:
+        query = query.filter(Candidate.location.ilike(f"%{location}%"))
+
+    if experience:
+        query = query.filter(Candidate.experience.ilike(f"%{experience}%"))
+
+    if education:
+        query = query.filter(Candidate.education.ilike(f"%{education}%"))
+
+    candidates = query.all()
+
+    result = []
+
+    for candidate in candidates:
+        print(type(candidate))
+        print(candidate.__class__.__module__)
+        print(hasattr(candidate, "to_dict"))
+
+        result.append({
+                "id": candidate.id,
+                "user_id": candidate.user_id,
+                "skills": candidate.skills,
+                "education": candidate.education,
+                "experience": candidate.experience,
+                "address": candidate.address,
+                "about": candidate.about,
+                "location": candidate.location
+            })
+
+    return jsonify(result), 200
+
+@recruiter_bp.route("/recruiter/candidate/<int:candidate_id>", methods=["GET"])
+@jwt_required()
+def get_candidate(candidate_id):
+
+    candidate = Candidate.query.get(candidate_id)
+
+    if not candidate:
+        return jsonify({"message": "Candidate not found"}), 404
+
+    return jsonify(candidate.to_dict()), 200
+
+@recruiter_bp.route("/recruiter/recent-applicants", methods=["GET"])
+@jwt_required()
+def recent_applicants():
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({"message": "Only recruiters can access"}), 403
+
+    recruiter_id = int(get_jwt_identity())
+
+    jobs = Job.query.filter_by(created_by=recruiter_id).all()
+
+    job_ids = [job.id for job in jobs]
+
+    applications = (
+        Application.query
+        .filter(Application.job_id.in_(job_ids))
+        .order_by(Application.id.desc())
+        .limit(10)
+        .all()
+    )
+
+    result = []
+
+    for application in applications:
+
+        candidate = Candidate.query.filter_by(
+            user_id=application.candidate_id
+        ).first()
+
+        user = User.query.get(application.candidate_id)
+
+        job = Job.query.get(application.job_id)
+
+        result.append({
+            "application_id": application.id,
+            "candidate_id": application.candidate_id,
+            "candidate_name": user.full_name if user else None,
+            "candidate_email": user.email if user else None,
+            "job_id": application.job_id,
+            "job_title": job.title if job else None,
+            "status": application.status
+        })
+
+    return jsonify({
+        "count": len(result),
+        "recent_applicants": result
     }), 200
