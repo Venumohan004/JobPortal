@@ -345,3 +345,61 @@ def candidate_report():
         "this_week": this_week,
         "this_month": this_month
     }), 200
+
+@admin_bp.route("/admin/jobs", methods=["GET"])
+@jwt_required()
+def get_all_jobs():
+
+    admin = db.session.get(User, int(get_jwt_identity()))
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    jobs = Job.query.all()
+
+    return jsonify({
+        "count": len(jobs),
+        "jobs": [job.to_dict() for job in jobs]
+    }), 200
+
+@admin_bp.route("/admin/applications", methods=["GET"])
+@jwt_required()
+def get_all_applications():
+
+    admin = db.session.get(User, int(get_jwt_identity()))
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    applications = Application.query.all()
+
+    return jsonify({
+        "count": len(applications),
+        "applications": [
+            application.to_dict()
+            for application in applications
+        ]
+    }), 200
+
+@admin_bp.route("/admin/jobs/<int:job_id>", methods=["DELETE"])
+@jwt_required()
+def delete_job(job_id):
+
+    admin = db.session.get(User, int(get_jwt_identity()))
+
+    if not admin or admin.role != "admin":
+        return jsonify({"message": "Access Denied"}), 403
+
+    job = db.session.get(Job, job_id)
+
+    if not job:
+        return jsonify({"message": "Job not found"}), 404
+
+    Application.query.filter_by(job_id=job.id).delete()
+
+    db.session.delete(job)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Job deleted successfully"
+    }), 200

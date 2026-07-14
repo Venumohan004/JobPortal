@@ -27,11 +27,14 @@ def apply_job(job_id):
         return jsonify({
         "message": "Job not found"
     }), 404
+    print("JWT Candidate ID:", candidate_id)
+    print("Job ID:", job_id)
 
     existing_application = Application.query.filter_by(
     candidate_id= candidate_id,
     job_id=job_id
     ).first()
+    print("Existing Application:", existing_application)
 
     if existing_application:
        return jsonify({
@@ -61,7 +64,7 @@ def apply_job(job_id):
         A new candidate has applied.
 
         Candidate:
-        {candidate.name}
+        {candidate.full_name}
 
         Job:
         {job.title}
@@ -200,22 +203,25 @@ def update_application_status(id):
 
     job = Job.query.get(application.job_id)
 
-    send_email (
-            subject="Application Status Updated",
-            recipients=[candidate.email],
-            body=f"""
-                Hello Recruiter,
+    send_email(
+    subject="Application Status Updated",
+    recipients=[candidate.email],
+    body=f"""
+            Hello {candidate.full_name},
 
-                A new candidate has applied.
+            Your application status has been updated.
 
-                Candidate:
-                {candidate.full_name}
+            Job Title:
+            {job.title}
 
-                Job:
-                {job.title}
+            Current Status:
+            {application.status}
 
-                Please login to review the application.
-                """
+            Please log in to your Job Portal account to view more details.
+
+            Best Regards,
+            Job Portal Team
+            """
             )
     return jsonify({
             "message": "Application status updated successfully",
