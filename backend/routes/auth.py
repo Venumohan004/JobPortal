@@ -92,22 +92,22 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        send_email(
-            subject="Welcome to Job Portal",
-            recipients=[user.email],
-            body=f"""
-            Hello {user.full_name},
+        # send_email(
+        #     subject="Welcome to Job Portal",
+        #     recipients=[user.email],
+        #     body=f"""
+        #     Hello {user.full_name},
 
-            Welcome to Job Portal!
+        #     Welcome to Job Portal!
 
-            Your account has been created successfully.
+        #     Your account has been created successfully.
 
-            Happy Job Hunting!
+        #     Happy Job Hunting!
 
-            Regards,
-            Job Portal Team
-            """
-            )
+        #     Regards,
+        #     Job Portal Team
+        #     """
+        #     )
 
         return jsonify({
             "message": "Registration Successful"
