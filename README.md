@@ -1,22 +1,191 @@
-# Job Portal Backend
+# 🚀 JobPortal – RESTful Backend API
 
-A production-ready **RESTful Job Portal Backend** built using **Python, Flask, MySQL, SQLAlchemy, JWT Authentication, and Flask-Mail**.
+<p align="center">
+
+![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge\&logo=python)
+![Flask](https://img.shields.io/badge/Flask-REST%20API-black?style=for-the-badge\&logo=flask)
+![MySQL](https://img.shields.io/badge/MySQL-Database-blue?style=for-the-badge\&logo=mysql)
+![JWT](https://img.shields.io/badge/JWT-Authentication-green?style=for-the-badge)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-red?style=for-the-badge)
+![GitHub](https://img.shields.io/badge/Open%20Source-GitHub-black?style=for-the-badge\&logo=github)
+
+</p>
+
+A **production-ready RESTful Job Portal Backend** built using **Python, Flask, MySQL, SQLAlchemy, JWT Authentication, Flask-Mail, and Flask-Migrate**.
+
+This project provides a complete backend solution for an online job portal where:
+
+* 👨‍🎓 Candidates can create profiles, upload resumes, search and apply for jobs.
+* 🏢 Recruiters can post jobs, manage applications, and track hiring.
+* 👑 Administrators can monitor users, jobs, applications, and platform analytics.
 
 ---
 
-# 🚀 Tech Stack
+## 🌟 Highlights
 
-- Python
-- Flask
-- MySQL
-- SQLAlchemy ORM
-- Flask-JWT-Extended
-- Flask-Mail
-- Flask-Migrate
-- Flask-CORS
-- JWT Authentication
-- Postman
-- Git & GitHub
+- 🔐 JWT Authentication & Authorization
+- 👨‍🎓 Candidate Portal
+- 🏢 Recruiter Portal
+- 👑 Admin Dashboard
+- 📄 Resume Upload & Download
+- ❤️ Saved Jobs
+- 👀 Recently Viewed Jobs
+- 📊 Analytics Dashboard
+- 📧 Email Integration
+- 🔍 Job Search & Filtering
+- 📑 Pagination & Sorting
+- 🛡️ Role-Based Access Control
+
+
+# ✨ Features
+
+## 🔐 Authentication
+
+* User Registration
+* Secure Login
+* JWT Authentication
+* Role-Based Authorization
+* Forgot Password
+* Password Reset via Email
+* Protected Routes
+* Password Hashing
+
+---
+
+## 👨‍🎓 Candidate Features
+
+* Create Profile
+* Update Profile
+* View Profile
+* Upload Resume
+* Download Resume
+* Delete Resume
+* Apply for Jobs
+* View Applied Jobs
+* Save Jobs
+* Remove Saved Jobs
+* Recently Viewed Jobs
+* Candidate Dashboard
+* Application Status Tracking
+* Job Recommendations
+
+---
+
+## 🏢 Recruiter Features
+
+* Recruiter Profile
+* Company Profile
+* Create Job
+* Update Job
+* Delete Job
+* View Posted Jobs
+* View Applications
+* Accept Candidates
+* Reject Candidates
+* Shortlist Candidates
+* Recruiter Dashboard
+* Recruiter Analytics
+
+---
+
+## 👑 Admin Features
+
+* Dashboard
+* View All Users
+* View All Recruiters
+* View All Candidates
+* View All Jobs
+* View All Applications
+* Delete Users
+* Delete Jobs
+* Reports
+* Platform Analytics
+
+---
+
+## 💼 Job Features
+
+* Create Job
+* Update Job
+* Delete Job
+* Search Jobs
+* Filter Jobs
+* Sort Jobs
+* Pagination
+* Company-wise Search
+* Location-wise Search
+* Salary Filtering
+* Experience Filtering
+* Skills Filtering
+
+---
+
+## 📄 Resume Management
+
+* Resume Upload
+* Resume Download
+* Resume Delete
+* PDF Validation
+* Secure Storage
+
+---
+
+## ❤️ Saved Jobs
+
+* Save Job
+* View Saved Jobs
+* Remove Saved Jobs
+
+---
+
+## 👀 Recently Viewed Jobs
+
+* Track Viewed Jobs
+* View Recently Viewed Jobs
+
+---
+
+## 📊 Dashboards
+
+### Candidate Dashboard
+
+* Applied Jobs
+* Saved Jobs
+* Selected Applications
+* Rejected Applications
+
+### Recruiter Dashboard
+
+* Jobs Posted
+* Applications Received
+* Candidate Statistics
+
+### Admin Dashboard
+
+* Total Users
+* Total Recruiters
+* Total Candidates
+* Total Jobs
+* Total Applications
+
+---
+
+# 🛠 Tech Stack
+
+* Python
+* Flask
+* MySQL
+* SQLAlchemy
+* Flask-JWT-Extended
+* Flask-Mail
+* Flask-Migrate
+* Flask-CORS
+* Alembic
+* REST API
+* JWT Authentication
+* Postman
+* Git
+* GitHub
 
 ---
 
@@ -25,432 +194,268 @@ A production-ready **RESTful Job Portal Backend** built using **Python, Flask, M
 ```text
 backend/
 │
+├── models/
+├── routes/
+├── services/
+├── migrations/
+├── static/
+├── templates/
+├── uploads/
+├── utils/
+├── instance/
+│
 ├── app.py
 ├── config.py
 ├── requirements.txt
-├── README.md
-│
-├── models/
-│   ├── __init__.py
-│   ├── user.py
-│   ├── candidate.py
-│   ├── recruiter.py
-│   ├── job.py
-│   ├── application.py
-│   └── saved_job.py
-│
-├── routes/
-│   ├── auth.py
-│   ├── candidate.py
-│   ├── recruiter.py
-│   ├── jobs.py
-│   ├── application.py
-│   ├── resume.py
-│   ├── saved_jobs.py
-│   └── admin.py
-│
-├── utils/
-│   └── email_service.py
-│
-├── uploads/
-│   ├── resumes/
-│   └── profile_images/
-│
-├── migrations/
-│
-└── templates/
+├── .env.example
+└── README.md
 ```
-
----
-
-# ✨ Features Implemented
-
-## ✅ Authentication Module
-
-- User Registration
-- User Login
-- Password Hashing
-- JWT Authentication
-- Protected Routes
-- User Profile
-- Forgot Password
-- Reset Password via Email
-
----
-
-## ✅ Role-Based Access Control (RBAC)
-
-- Admin
-- Recruiter
-- Candidate
-
-Each role has access only to authorized APIs.
-
----
-
-## ✅ Candidate Module
-
-- Create Candidate Profile
-- View Candidate Profile
-- Update Candidate Profile
-
----
-
-## ✅ Recruiter Module
-
-- Create Recruiter Profile
-- View Recruiter Profile
-- Update Recruiter Profile
-
----
-
-## ✅ Job Management
-
-- Create Job
-- Update Job
-- Delete Job
-- View All Jobs
-- Search Jobs
-- Filter by Company
-- Filter by Location
-- Filter by Salary
-- Pagination
-- Recruiter View My Jobs
-
----
-
-## ✅ Job Application Module
-
-- Apply for Job
-- Prevent Duplicate Applications
-- View Applied Jobs
-- Delete Application
-- Recruiter View Applications
-- Update Application Status
-
----
-
-## ✅ Resume Management
-
-- Upload Resume
-- Download Resume
-- View Resume
-- Delete Resume
-- Upload Profile Image
-
----
-
-## ✅ Saved Jobs
-
-- Save Job
-- View Saved Jobs
-- Remove Saved Job
-
----
-
-## ✅ Candidate Dashboard
-
-- Total Applications
-- Saved Jobs Count
-- Recent Applications
-
----
-
-## ✅ Recruiter Dashboard
-
-- Total Jobs Posted
-- Total Applications Received
-- Recent Jobs
-- Recent Applications
-
----
-
-## ✅ Admin Module
-
-### User Management
-
-- View All Users
-- Delete User
-- Prevent Admin Account Deletion
-
-### Admin Dashboard
-
-- Total Users
-- Total Recruiters
-- Total Candidates
-- Total Jobs
-- Total Applications
-- Pending Applications
-- Accepted Applications
-- Rejected Applications
-- Latest Registered Users
-- Latest Jobs
-- Latest Applications
-
----
-
-## ✅ Email Integration
-
-- Welcome Email
-- Forgot Password Email
-- Password Reset Email
-
----
-
-# 🔒 Security Features
-
-- Password Hashing
-- JWT Authentication
-- Role-Based Authorization
-- Protected Routes
-- Environment Variables (.env)
-- Secure Gmail SMTP Configuration
-
----
-
-# 🛠 Database
-
-MySQL with SQLAlchemy ORM.
-
-## Tables
-
-- Users
-- Candidates
-- Recruiters
-- Jobs
-- Applications
-- Saved Jobs
-
----
-
-# 📬 API Testing
-
-All APIs have been tested using **Postman**.
-
-### Authentication APIs
-
-- Register
-- Login
-- Profile
-- Forgot Password
-- Reset Password
-
-### Candidate APIs
-
-- Create Profile
-- View Profile
-- Update Profile
-
-### Recruiter APIs
-
-- Create Profile
-- View Profile
-- Update Profile
-
-### Job APIs
-
-- Create Job
-- Update Job
-- Delete Job
-- Get Jobs
-- Search Jobs
-- Filter Jobs
-- Pagination
-
-### Application APIs
-
-- Apply Job
-- View Applications
-- Delete Application
-- Recruiter View Applications
-- Update Status
-
-### Resume APIs
-
-- Upload Resume
-- Download Resume
-- Delete Resume
-- Upload Profile Image
-
-### Saved Job APIs
-
-- Save Job
-- View Saved Jobs
-- Delete Saved Job
-
-### Admin APIs
-
-- View All Users
-- Delete User
-- Admin Dashboard
 
 ---
 
 # ⚙️ Installation
 
-Clone the repository
+## 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/Venumohan004/JobPortal.git
+git clone https://github.com/Venumohan004/jobPortal.git
 ```
-
-Go to project folder
 
 ```bash
-cd JobPortal/backend
+cd jobPortal
 ```
 
-Create virtual environment
+---
+
+## 2️⃣ Create Virtual Environment
 
 ```bash
 python -m venv venv
 ```
 
-Activate virtual environment
-
-### Windows
+Windows
 
 ```bash
 venv\Scripts\activate
 ```
 
-### Linux / macOS
+Linux / macOS
 
 ```bash
 source venv/bin/activate
 ```
 
-Install dependencies
+---
+
+## 3️⃣ Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Configure the `.env` file
+---
+
+## 4️⃣ Configure Environment Variables
+
+Create a `.env` file.
 
 ```env
 SECRET_KEY=your_secret_key
 
-JWT_SECRET_KEY=your_jwt_secret
+JWT_SECRET_KEY=your_jwt_secret_key
 
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=job_portal
-DB_USER=root
-DB_PASSWORD=your_password
+MYSQL_HOST=localhost
+
+MYSQL_USER=root
+
+MYSQL_PASSWORD=your_password
+
+MYSQL_DB=job_portal_day4
 
 MAIL_SERVER=smtp.gmail.com
+
 MAIL_PORT=587
-MAIL_USE_TLS=True
 
 MAIL_USERNAME=your_email@gmail.com
+
 MAIL_PASSWORD=your_app_password
-MAIL_DEFAULT_SENDER=your_email@gmail.com
+
+MAIL_USE_TLS=True
+
+MAIL_USE_SSL=False
+
+```
+ 
+---
+
+## 5️⃣ Database Migration
+
+```bash
+flask db init
 ```
 
-Run the application
+```bash
+flask db migrate
+```
+
+```bash
+flask db upgrade
+```
+
+---
+
+## 6️⃣ Run Server
 
 ```bash
 python app.py
 ```
 
-Server
+Server URL
 
-```
+```text
 http://127.0.0.1:5000
 ```
 
 ---
 
-# 📌 Project Progress
+# 📌 API Modules
 
-## ✅ Day 1
-- Project Setup
+### 🔐 Authentication
 
-## ✅ Day 2
-- MySQL Configuration
+* Register
+* Login
+* Forgot Password
+* Reset Password
 
-## ✅ Day 3
-- User Model
+### 👨‍🎓 Candidate APIs
 
-## ✅ Day 4
-- Registration API
+* Candidate Profile
+* Apply Job
+* Resume
+* Saved Jobs
+* Recently Viewed Jobs
+* Dashboard
 
-## ✅ Day 5
-- Login API
-- JWT Authentication
+### 🏢 Recruiter APIs
 
-## ✅ Day 6
-- Role-Based Access Control
+* Recruiter Profile
+* Company Profile
+* Job CRUD
+* Applications
+* Dashboard
+* Analytics
 
-## ✅ Day 7
-- Job CRUD APIs
+### 👑 Admin APIs
 
-## ✅ Day 8
-- Job Search APIs
+* Dashboard
+* Users
+* Jobs
+* Applications
+* Reports
 
-## ✅ Day 9
-- Job Application System
+### 💼 Job APIs
 
-## ✅ Day 10
-- Recruiter Application Management
-
-## ✅ Day 11
-- Admin User Management
-
-## ✅ Day 12
-- Flask-Mail Integration
-
-## ✅ Day 13
-- Forgot Password & Reset Password
-
-## ✅ Day 14
-- Candidate Profile Module
-
-## ✅ Day 15
-- Recruiter Profile Module
-
-## ✅ Day 16
-- Recruiter Dashboard
-
-## ✅ Day 17
-- Candidate Dashboard
-
-## ✅ Day 18
-- Admin Dashboard
-- Admin Statistics
-- Latest Users
-- Latest Jobs
-- Latest Applications
-- Delete User with Related Data Handling
+* CRUD
+* Search
+* Filter
+* Sort
+* Pagination
 
 ---
 
-# 🚀 Upcoming Features
+# 🔒 Security
 
-- Advanced Search Filters
-- Sorting
-- Pagination Improvements
-- Bookmark Enhancements
-- Notifications
-- Swagger API Documentation
-- Unit Testing
-- Docker
-- CI/CD
-- Deployment (Render / Railway / AWS)
+* JWT Authentication
+* Password Hashing
+* Role-Based Access Control
+* Protected Endpoints
+* Input Validation
+* Secure Password Reset Tokens
+* File Validation
 
 ---
 
-# 👨‍💻 Author
+# 🧪 API Testing
+
+All REST APIs were tested using **Postman**.
+
+Example Response
+
+```json
+{
+    "message": "Login Successful",
+    "token": "JWT_TOKEN"
+}
+```
+
+---
+
+# 🚀 Future Enhancements
+
+* AI Resume Screening
+* AI Candidate Ranking
+* Email Notifications
+* Interview Scheduling Improvements
+* Docker Deployment
+* Swagger/OpenAPI Documentation
+* Unit Testing
+* CI/CD Pipeline
+* Redis Caching
+
+---
+
+# 📷 Project Screenshots
+
+You can add:
+
+* Login API
+* Register API
+* Candidate Dashboard
+* Recruiter Dashboard
+* Admin Dashboard
+* Postman Collection
+* Database ER Diagram
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes.
+4. Push the branch.
+5. Open a Pull Request.
+
+---
+
+# 👨‍💻 Developer
 
 **P. Venumohan**
 
 🎓 B.Tech – Computer Science & Data Science
 
-💻 Python | Flask | MySQL | SQLAlchemy | REST API
+💻 Python Backend & REST API Developer
+
+📍 Andhra Pradesh, India
 
 🔗 GitHub: https://github.com/Venumohan004
 
 ---
 
-## ⭐ If you found this project useful, don't forget to Star the repository!
+# ⭐ Show Your Support
+
+If you found this project useful, please consider giving it a **⭐ Star** on GitHub.
+
+Your support helps and motivates me to build more open-source projects.
+
+---
+
+Made with ❤️ using Python & Flask by **P. Venumohan**
+
+---
+
+# 📄 License
+
+This project is licensed under the **MIT License**. 
