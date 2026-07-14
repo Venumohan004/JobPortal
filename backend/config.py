@@ -1,43 +1,48 @@
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-from urllib.parse import quote_plus
 
 load_dotenv()
 
+
 class Config:
+
     SECRET_KEY = os.getenv("SECRET_KEY")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 
-    DB_HOST = os.getenv("DB_HOST")
-    DB_PORT = os.getenv("DB_PORT")
-    DB_NAME = os.getenv("DB_NAME")
-    DB_USER = os.getenv("DB_USER")
-    DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
 
-    SQLALCHEMY_DATABASE_URI = (
-        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    )
+    # Render PostgreSQL Database
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
+    if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace(
+            "postgres://",
+            "postgresql://",
+            1
+        )
+
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+
+    # Email Configuration
     MAIL_SERVER = os.getenv("MAIL_SERVER")
-    MAIL_PORT = int(os.getenv("MAIL_PORT"))
+    MAIL_PORT = int(os.getenv("MAIL_PORT", 587))
     MAIL_USE_TLS = os.getenv("MAIL_USE_TLS") == "True"
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
 
+
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
     RESUME_FOLDER = os.path.join(UPLOAD_FOLDER, "resumes")
     PROFILE_FOLDER = os.path.join(UPLOAD_FOLDER, "profile_images")
 
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB
 
-    
-
- 
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
