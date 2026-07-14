@@ -108,6 +108,12 @@ def profile_page():
     return render_template("profile.html")
 
 
+@app.route("/config-test")
+def config_test():
+    return {
+        "SECRET_KEY": bool(app.config.get("SECRET_KEY")),
+        "JWT_SECRET_KEY": bool(app.config.get("JWT_SECRET_KEY"))
+    }
 
 # =====================
 # Run Application
