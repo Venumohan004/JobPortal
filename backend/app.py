@@ -17,7 +17,7 @@ from routes.saved_jobs import saved_bp
 from routes.admin import admin_bp
 
 # Email
-from utils.email import mail
+from utils.email_service import mail
 
 
 app = Flask(__name__)

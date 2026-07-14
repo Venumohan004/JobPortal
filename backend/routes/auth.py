@@ -44,74 +44,78 @@ def test():
 # -------------------------------
 @auth.route("/register", methods=["GET", "POST"])
 def register():
+    try:
 
-    if request.method == "GET":
+        if request.method == "GET":
+            return jsonify({
+                "message": "Register API is working. Please use POST with JSON data."
+            })
+
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({
+                "message": "Please send JSON data with Content-Type: application/json"
+            }), 400
+
+        full_name = data.get("full_name")
+        email = data.get("email")
+        password = data.get("password")
+        phone = data.get("phone")
+        role = data.get("role")
+
+        if not all([full_name, email, password, role]):
+            return jsonify({
+                "message": "Required fields are missing"
+            }), 400
+
+        existing = User.query.filter_by(email=email).first()
+
+        if existing:
+            return jsonify({
+                "message": "Email already exists"
+            }), 400
+
+        hashed_password = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        )
+
+        user = User(
+            full_name=full_name,
+            email=email,
+            password=hashed_password.decode("utf-8"),
+            phone=phone,
+            role=role
+        )
+
+        db.session.add(user)
+        db.session.commit()
+
+        send_email(
+            subject="Welcome to Job Portal",
+            recipients=[user.email],
+            body=f"""
+            Hello {user.full_name},
+
+            Welcome to Job Portal!
+
+            Your account has been created successfully.
+
+            Happy Job Hunting!
+
+            Regards,
+            Job Portal Team
+            """
+            )
+
         return jsonify({
-            "message": "Register API is working. Please use POST with JSON data."
-        })
+            "message": "Registration Successful"
+        }), 201
 
-    data = request.get_json(silent=True)
-
-    if not data:
-        return jsonify({
-            "message": "Please send JSON data with Content-Type: application/json"
-        }), 400
-
-    full_name = data.get("full_name")
-    email = data.get("email")
-    password = data.get("password")
-    phone = data.get("phone")
-    role = data.get("role")
-
-    if not all([full_name, email, password, role]):
-        return jsonify({
-            "message": "Required fields are missing"
-        }), 400
-
-    existing = User.query.filter_by(email=email).first()
-
-    if existing:
-        return jsonify({
-            "message": "Email already exists"
-        }), 400
-
-    hashed_password = bcrypt.hashpw(
-        password.encode("utf-8"),
-        bcrypt.gensalt()
-    )
-
-    user = User(
-        full_name=full_name,
-        email=email,
-        password=hashed_password.decode("utf-8"),
-        phone=phone,
-        role=role
-    )
-
-    db.session.add(user)
-    db.session.commit()
-
-    send_email(
-    subject="Welcome to Job Portal",
-    recipients=[user.email],
-    body=f"""
-    Hello {user.full_name},
-
-    Welcome to Job Portal!
-
-    Your account has been created successfully.
-
-    Happy Job Hunting!
-
-    Regards,
-    Job Portal Team
-    """
-    )
-
-    return jsonify({
-        "message": "Registration Successful"
-    }), 201
-
+    except Exception as e:
+        print("REGISTER ERROR:", e)
+        return jsonify({"error": str(e)}), 500
 
 # -------------------------------
 # Login API
