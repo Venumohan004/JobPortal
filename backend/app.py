@@ -16,8 +16,7 @@ from routes.jobs import jobs_bp
 from routes.application import application_bp
 from routes.resume import resume_bp
 from routes.saved_jobs import saved_bp
- 
-from utils.email_service import mail
+
 from routes.admin import admin_bp
 
 from utils.email import mail
@@ -80,8 +79,9 @@ def dashboard():
 def profile_page():
     return render_template("profile.html")
 
-with app.app_context():
-    db.create_all()
+# Database tables are managed through Flask-Migrate
+# with app.app_context():
+#     db.create_all()
 
 if __name__ == "__main__":
     # print(app.url_map)
