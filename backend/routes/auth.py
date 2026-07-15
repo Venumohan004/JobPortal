@@ -126,9 +126,9 @@ def login():
         data = request.get_json(silent=True)
 
         if not data:
-          return jsonify({
-        "message": "Please send JSON data"
-        }),400
+            return jsonify({
+                "message": "Please send JSON data"
+            }), 400
 
         print("Received:", data)
 
@@ -138,15 +138,25 @@ def login():
         user = User.query.filter_by(email=email).first()
 
         if not user:
-            return jsonify({"message": "Invalid Email"}), 401
+            return jsonify({
+                "message": "Invalid Email"
+            }), 401
 
         if not bcrypt.checkpw(
             password.encode("utf-8"),
             user.password.encode("utf-8")
         ):
-            return jsonify({"message": "Invalid Password"}), 401
+            return jsonify({
+                "message": "Invalid Password"
+            }), 401
 
-        access_token = create_access_token(identity=str(user.id))
+        access_token = create_access_token(
+            identity=str(user.id),
+            additional_claims={
+                "email": user.email,
+                "role": user.role
+            }
+        )
 
         return jsonify({
             "message": "Login Successful",
@@ -155,8 +165,10 @@ def login():
 
     except Exception as e:
         print("ERROR:", e)
-        return jsonify({"error": str(e)}), 500
-
+        return jsonify({
+            "error": str(e)
+        }), 500
+    
 @auth.route("/profile", methods=["GET"])
 @jwt_required()
 def profile():
