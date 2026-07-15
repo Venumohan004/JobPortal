@@ -6,8 +6,10 @@ from flask_jwt_extended import get_jwt_identity
 from sqlalchemy import or_
 from models.saved_job import SavedJob
 from models.recently_viewed_job import RecentlyViewedJob
+from models.application import Application
 
 jobs_bp = Blueprint("jobs", __name__)
+
 @jobs_bp.route("/jobs", methods=["POST"])
 @jwt_required()
 def create_job():
@@ -19,8 +21,28 @@ def create_job():
             return jsonify({
                 "message": "Only recruiters can create jobs"
             }), 403
-            
+
+        if not request.is_json:
+            return jsonify({
+                "message": "JSON required"
+            }), 400
+
         data = request.get_json()
+
+        required = [
+            "title",
+            "company",
+            "location",
+            "salary",
+            "description"
+        ]
+
+        for field in required:
+            if field not in data or not data[field]:
+                return jsonify({
+                    "message": f"{field} is required"
+                }), 400
+
 
         job = Job(
             title=data["title"],
@@ -34,18 +56,29 @@ def create_job():
         )
 
         db.session.add(job)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+
+        except Exception:
+            db.session.rollback()
+            return jsonify({
+                "message": "Failed to create job"
+            }),500
+
 
         return jsonify({
             "message": "Job Created Successfully",
             "job": job.to_dict()
-        }), 201
+        }),201
+
 
     except Exception as e:
         db.session.rollback()
-        print("Error:", e)
-        return jsonify({"error": str(e)}), 500
-
+        return jsonify({
+            "error": str(e)
+        }),500
+    
 @jobs_bp.route("/jobs", methods=["GET"])
 def get_jobs():
 
@@ -55,14 +88,17 @@ def get_jobs():
     title = request.args.get("title", "")
 
     page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 5, type=int)
+    per_page = min(
+        request.args.get("per_page",5,type=int),
+        50
+    )
 
     min_salary = request.args.get("min_salary", type=int)
     max_salary = request.args.get("max_salary", type=int)
 
     sort = request.args.get("sort")
 
-    query = Job.query
+    query = Job.query.order_by(Job.created_at.desc())
 
     if search:
         query = query.filter(
@@ -83,10 +119,10 @@ def get_jobs():
     if title:
         query = query.filter(Job.title.ilike(f"%{title}%"))
 
-    if min_salary:
+    if min_salary is not None:
         query = query.filter(Job.salary >= min_salary)
 
-    if max_salary:
+    if max_salary is not None:
         query = query.filter(Job.salary <= max_salary)
 
     if sort == "salary_asc":
@@ -96,7 +132,7 @@ def get_jobs():
         query = query.order_by(Job.salary.desc())
 
     elif sort == "latest":
-        query = query.order_by(Job.id.desc())
+        query = Job.query.order_by(Job.created_at.desc())
 
     elif sort == "oldest":
         query = query.order_by(Job.id.asc())
@@ -141,8 +177,29 @@ def delete_job(id):
         "message": "You can delete only your own jobs"
     }), 403
 
-    db.session.delete(job)
-    db.session.commit()
+    try:
+
+        Application.query.filter_by(
+        job_id=id
+        ).delete(
+        synchronize_session=False
+        )
+        SavedJob.query.filter_by(
+        job_id=id
+        ).delete()
+
+        RecentlyViewedJob.query.filter_by(
+        job_id=id
+        ).delete()
+
+        db.session.delete(job)
+        db.session.commit()
+
+    except Exception:
+        db.session.rollback()
+        return jsonify({
+            "message":"Delete failed"
+        }),500
 
     return jsonify({
         "message": "Job Deleted Successfully"
@@ -169,7 +226,10 @@ def search_jobs():
 
 @jobs_bp.route("/jobs/company/<company>", methods=["GET"])
 def jobs_by_company(company):
-    jobs = Job.query.filter_by(company=company).all()
+
+    jobs = Job.query.filter(
+        Job.company.ilike(f"%{company}%")
+    ).all()
 
     return jsonify({
         "count": len(jobs),
@@ -178,8 +238,9 @@ def jobs_by_company(company):
 
 @jobs_bp.route("/jobs/location/<location>", methods=["GET"])
 def jobs_by_location(location):
-    jobs = Job.query.filter_by(location=location).all()
-
+    jobs = Job.query.filter(
+        Job.location.ilike(f"%{location}%")
+    ).all()
     return jsonify({
         "count": len(jobs),
         "jobs": [job.to_dict() for job in jobs]
@@ -197,7 +258,8 @@ def jobs_by_salary(salary):
 @jobs_bp.route("/jobs/page", methods=["GET"])
 def paginate_jobs():
     page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 5, type=int)
+    per_page = min(
+    request.args.get("per_page",5,type=int),50)
 
     pagination = Job.query.paginate(
         page=page,
@@ -242,7 +304,7 @@ def filter_jobs():
     company = request.args.get("company")
     location = request.args.get("location")
 
-    query = Job.query
+    query = Job.query.order_by(Job.created_at.desc())
 
     if company:
         query = query.filter(Job.company.ilike(f"%{company}%"))
@@ -292,8 +354,14 @@ def save_job(job_id):
         job_id=job_id
     )
 
-    db.session.add(saved)
-    db.session.commit()
+    try:
+        db.session.add(saved)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({
+            "message":"Saved failed"
+        }),500
 
     return jsonify({
         "message": "Job saved successfully"
@@ -322,9 +390,16 @@ def remove_saved_job(job_id):
             "message": "Saved job not found"
         }), 404
 
-    db.session.delete(saved_job)
-    db.session.commit()
+    try:
+        db.session.delete(saved_job)
+        db.session.commit()
 
+    except Exception:
+        db.session.rollback()
+        return jsonify({
+            "message": "Failed to remove saved job"
+        }),500
+    
     return jsonify({
         "message": "Saved job removed successfully"
     }), 200
@@ -361,8 +436,66 @@ def get_single_job(id):
                 job_id=id
             )
 
-            db.session.add(viewed_job)
-            db.session.commit()
+            try:
+                db.session.add(viewed_job)
+                db.session.commit()
+
+            except Exception:
+                db.session.rollback()
 
 
     return jsonify(job.to_dict()), 200
+
+@jobs_bp.route("/jobs/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_job(id):
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can update jobs"
+        }), 403
+
+    job = db.session.get(Job, id)
+
+    if not job:
+        return jsonify({
+            "message": "Job not found"
+        }),404
+
+    if job.created_by != int(get_jwt_identity()):
+        return jsonify({
+            "message":"You can update only your own jobs"
+        }),403
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "message":"JSON required"
+        }),400
+
+
+    job.title = data.get("title", job.title)
+    job.company = data.get("company", job.company)
+    job.location = data.get("location", job.location)
+    job.salary = data.get("salary", job.salary)
+    job.description = data.get("description", job.description)
+    job.skills = data.get("skills", job.skills)
+    job.experience = data.get("experience", job.experience)
+
+    try:
+        db.session.commit()
+
+    except Exception:
+        db.session.rollback()
+        return jsonify({
+            "message":"Update failed"
+        }),500
+
+    return jsonify({
+        "message":"Job updated successfully",
+        "job":job.to_dict()
+    }),200
+

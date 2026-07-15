@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+import logging
 
 from models import db
 from models.candidate import Candidate
@@ -9,7 +10,6 @@ from models.job import Job
 from models.recently_viewed_job import RecentlyViewedJob
 
 candidate = Blueprint("candidate", __name__)
-
 
 # ===========================
 # Create Candidate Profile
@@ -29,6 +29,10 @@ def create_profile():
 
     data = request.get_json()
 
+    if not data:
+        return jsonify({
+        "message":"JSON required"
+        }),400
     profile = Candidate(
         user_id=user_id,
         skills=data.get("skills"),
@@ -53,6 +57,12 @@ def create_profile():
 @candidate.route("/candidate/profile", methods=["GET"])
 @jwt_required()
 def get_profile():
+    claims=get_jwt()
+
+    if claims["role"]!="candidate":
+        return jsonify({
+            "message":"Only candidates allowed"
+    }),403
 
     user_id = int(get_jwt_identity())
 
@@ -72,6 +82,12 @@ def get_profile():
 @candidate.route("/candidate/profile", methods=["PUT"])
 @jwt_required()
 def update_profile():
+    claims=get_jwt()
+
+    if claims["role"]!="candidate":
+        return jsonify({
+            "message":"Only candidates allowed"
+    }),403
 
     user_id = int(get_jwt_identity())
 
@@ -83,6 +99,11 @@ def update_profile():
         }), 404
 
     data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "message":"JSON required"
+         }),400
 
     profile.skills = data.get("skills", profile.skills)
     profile.education = data.get("education", profile.education)
@@ -104,10 +125,17 @@ def update_profile():
 @candidate.route("/candidate/dashboard", methods=["GET"])
 @jwt_required()
 def candidate_dashboard():
+    claims=get_jwt()
 
+    if claims["role"]!="candidate":
+        return jsonify({
+            "message":"Only candidates allowed"
+    }),403
     user_id = int(get_jwt_identity())
 
-    print("Dashboard User ID:", user_id)
+    logging.info(
+    f"Dashboard accessed by {user_id}"
+    )
 
     applied_jobs = Application.query.filter_by(
         candidate_id=user_id
@@ -120,7 +148,7 @@ def candidate_dashboard():
     return jsonify({
         "applied_jobs": applied_jobs,
         "saved_jobs": saved_jobs
-    }), 200
+        }), 200
 
 
 # ===========================
@@ -129,13 +157,19 @@ def candidate_dashboard():
 @candidate.route("/candidate/recent-applications", methods=["GET"])
 @jwt_required()
 def recent_applications():
+    claims=get_jwt()
+
+    if claims["role"]!="candidate":
+        return jsonify({
+            "message":"Only candidates allowed"
+        }),403
 
     user_id = int(get_jwt_identity())
 
     applications = (
         Application.query
         .filter_by(candidate_id=user_id)
-        .order_by(Application.id.desc())
+        .order_by(Application.created_at.desc())
         .limit(5)
         .all()
     )
@@ -155,10 +189,18 @@ def recent_applications():
 @candidate.route("/candidate/application-status", methods=["GET"])
 @jwt_required()
 def application_status():
+    claims=get_jwt()
+
+    if claims["role"]!="candidate":
+        return jsonify({
+            "message":"Only candidates allowed"
+        }),403
 
     user_id = int(get_jwt_identity())
 
-    print("Status User ID:", user_id)
+    logging.info(
+    f"Application status accessed by {user_id}"
+    )
 
     applied = Application.query.filter_by(
         candidate_id=user_id,
@@ -194,6 +236,12 @@ def application_status():
 @candidate.route("/candidate/saved-jobs", methods=["GET"])
 @jwt_required()
 def get_saved_jobs():
+    claims=get_jwt()
+
+    if claims["role"]!="candidate":
+        return jsonify({
+            "message":"Only candidates allowed"
+        }),403
 
     user_id = int(get_jwt_identity())
 
@@ -201,6 +249,7 @@ def get_saved_jobs():
         db.session.query(Job)
         .join(SavedJob, Job.id == SavedJob.job_id)
         .filter(SavedJob.candidate_id == user_id)
+        .order_by(Job.created_at.desc())
         .all()
     )
 
@@ -216,6 +265,12 @@ def get_saved_jobs():
 @candidate.route("/candidate/recent-jobs", methods=["GET"])
 @jwt_required()
 def recent_jobs():
+    claims=get_jwt()
+
+    if claims["role"]!="candidate":
+        return jsonify({
+            "message":"Only candidates allowed"
+        }),403
 
     user_id = int(get_jwt_identity())
 

@@ -14,6 +14,13 @@ recruiter_bp = Blueprint("recruiter", __name__)
 @recruiter_bp.route("/recruiter/profile", methods=["POST"])
 @jwt_required()
 def create_recruiter():
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters allowed"
+        }),403
+
     user_id = int(get_jwt_identity())
 
     user = User.query.get(user_id)
@@ -36,6 +43,20 @@ def create_recruiter():
     }), 400
 
     data = request.get_json()
+    if not data:
+        return jsonify({
+        "message":"JSON required"
+        }),400
+    required = [
+        "company_name",
+        "company_email"
+        ]
+
+    for field in required:
+        if field not in data:
+         return jsonify({
+            "message":f"{field} is required"
+        }),400
 
     recruiter = Recruiter(
     company_name=data.get("company_name"),
@@ -57,6 +78,13 @@ def create_recruiter():
 @jwt_required()
 def get_recruiter_profile():
 
+    claims=get_jwt()
+
+    if claims["role"]!="recruiter":
+        return jsonify({
+        "message":"Only recruiters allowed"
+    }),403
+
     user_id = int(get_jwt_identity())
 
     recruiter = Recruiter.query.filter_by(user_id=user_id).first()
@@ -72,6 +100,13 @@ def get_recruiter_profile():
 @jwt_required()
 def update_recruiter_profile():
 
+    claims=get_jwt()
+
+    if claims["role"]!="recruiter":
+        return jsonify({
+        "message":"Only recruiters allowed"
+    }),403
+
     user_id = int(get_jwt_identity())
 
     recruiter = Recruiter.query.filter_by(user_id=user_id).first()
@@ -82,6 +117,10 @@ def update_recruiter_profile():
         }), 404
 
     data = request.get_json()
+    if not data:
+        return jsonify({
+        "message":"JSON required"
+        }),400
 
     recruiter.company_name = data.get("company_name", recruiter.company_name)
     recruiter.company_email = data.get("company_email", recruiter.company_email)
@@ -160,6 +199,13 @@ def applications_per_job():
 @jwt_required()
 def recent_jobs():
 
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters allowed"
+        }),403
+
     recruiter_id = int(get_jwt_identity())
 
     jobs = Job.query.filter_by(
@@ -169,9 +215,16 @@ def recent_jobs():
     return jsonify({
         "jobs": [job.to_dict() for job in jobs]
     }), 200
+    
 @recruiter_bp.route("/recruiter/jobs/<int:job_id>/applications", methods=["GET"])
 @jwt_required()
 def recruiter_job_applications(job_id):
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters allowed"
+        }),403
 
     user_id = int(get_jwt_identity())
 
@@ -199,6 +252,12 @@ def recruiter_job_applications(job_id):
 @recruiter_bp.route("/recruiter/jobs/<int:job_id>/recommended-candidates", methods=["GET"])
 @jwt_required()
 def recommended_candidates(job_id):
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters allowed"
+        }),403
     user_id = int(get_jwt_identity())
 
     user = User.query.get(user_id)
@@ -271,9 +330,6 @@ def search_candidates():
     result = []
 
     for candidate in candidates:
-        print(type(candidate))
-        print(candidate.__class__.__module__)
-        print(hasattr(candidate, "to_dict"))
 
         result.append({
                 "id": candidate.id,
@@ -291,6 +347,13 @@ def search_candidates():
 @recruiter_bp.route("/recruiter/candidate/<int:candidate_id>", methods=["GET"])
 @jwt_required()
 def get_candidate(candidate_id):
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters allowed"
+        }),403
 
     candidate = Candidate.query.get(candidate_id)
 
