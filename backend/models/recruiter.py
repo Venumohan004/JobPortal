@@ -17,7 +17,7 @@ class Recruiter(db.Model):
     )
 
     # Add this here
-    user = db.relationship("User", backref="recruiter")
+    # user = db.relationship("User", backref="recruiter")
 
     def to_dict(self):
         return {

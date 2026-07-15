@@ -1,8 +1,8 @@
-"""Initial PostgreSQL schema
+"""Initial migration
 
-Revision ID: 18ca6ca441df
+Revision ID: eac851792c76
 Revises: 
-Create Date: 2026-07-14 21:55:52.280726
+Create Date: 2026-07-15 13:08:19.261969
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '18ca6ca441df'
+revision = 'eac851792c76'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,17 +30,18 @@ def upgrade():
     sa.Column('full_name', sa.String(length=100), nullable=False),
     sa.Column('email', sa.String(length=100), nullable=False),
     sa.Column('password', sa.String(length=255), nullable=False),
-    sa.Column('phone', sa.String(length=15), nullable=True),
+    sa.Column('phone', sa.String(length=20), nullable=True),
     sa.Column('role', sa.Enum('candidate', 'recruiter', 'admin', name='user_role'), nullable=False),
-    sa.Column('status', sa.Enum('Applied', 'Shortlisted', 'Rejected', 'Selected', name='application_status'), nullable=True),
     sa.Column('resume', sa.String(length=255), nullable=True),
     sa.Column('profile_image', sa.String(length=255), nullable=True),
     sa.Column('location', sa.String(length=100), nullable=True),
     sa.Column('bio', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_users_email'), ['email'], unique=True)
+
     op.create_table('candidates',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -64,6 +65,7 @@ def upgrade():
     sa.Column('skills', sa.String(length=255), nullable=True),
     sa.Column('experience', sa.String(length=100), nullable=True),
     sa.Column('created_by', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -83,10 +85,12 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('candidate_id', sa.Integer(), nullable=False),
     sa.Column('job_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.String(length=50), nullable=True),
+    sa.Column('status', sa.Enum('Applied', 'Shortlisted', 'Rejected', 'Selected', name='application_status'), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['candidate_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['job_id'], ['jobs.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('candidate_id', 'job_id', name='uq_candidate_job')
     )
     op.create_table('recently_viewed_jobs',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -117,6 +121,9 @@ def downgrade():
     op.drop_table('recruiters')
     op.drop_table('jobs')
     op.drop_table('candidates')
+    with op.batch_alter_table('users', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_users_email'))
+
     op.drop_table('users')
     op.drop_table('resumes')
     # ### end Alembic commands ###

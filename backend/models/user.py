@@ -16,7 +16,8 @@ class User(db.Model):
     email = db.Column(
         db.String(100),
         unique=True,
-        nullable=False
+        nullable=False,
+        index=True
     )
 
     password = db.Column(
@@ -24,7 +25,7 @@ class User(db.Model):
         nullable=False
     )
 
-    phone = db.Column(db.String(15))
+    phone = db.Column(db.String(20))
 
 
     role = db.Column(
@@ -38,18 +39,31 @@ class User(db.Model):
         nullable=False
     )
 
-
-    status = db.Column(
-        db.Enum(
-            "Applied",
-            "Shortlisted",
-            "Rejected",
-            "Selected",
-            name="application_status"
-        ),
-        default="Applied"
+    candidate = db.relationship(
+        "Candidate",
+        backref="user",
+        uselist=False,
+        cascade="all, delete-orphan"
     )
 
+    recruiter = db.relationship(
+        "Recruiter",
+        backref="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+
+    jobs = db.relationship(
+        "Job",
+        backref="creator",
+        lazy=True
+    )
+
+    applications = db.relationship(
+        "Application",
+        backref="candidate",
+        lazy=True
+    )
 
     resume = db.Column(db.String(255))
 
@@ -63,3 +77,6 @@ class User(db.Model):
         db.DateTime,
         default=datetime.utcnow
     )
+
+    def __repr__(self):
+        return f"<User {self.email}>"

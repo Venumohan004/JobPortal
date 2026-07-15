@@ -14,7 +14,7 @@ class Candidate(db.Model):
     about = db.Column(db.Text)
     location = db.Column(db.String(100))
 
-    user = db.relationship("User", backref="candidate", lazy=True)
+    # user = db.relationship("User", backref="candidate", lazy=True)
 
     def to_dict(self):
         return {

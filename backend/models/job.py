@@ -1,4 +1,5 @@
 from models import db
+from datetime import datetime
 
 class Job(db.Model):
     __tablename__ = "jobs"
@@ -18,8 +19,17 @@ class Job(db.Model):
         db.ForeignKey("users.id"),
         nullable=False
     )
-
-    user = db.relationship("User", backref="jobs")
+    created_at = db.Column(
+    db.DateTime,
+    default=datetime.utcnow,
+    nullable=False
+    )
+    applications = db.relationship(
+    "Application",
+    backref="job",
+    lazy=True,
+    cascade="all, delete-orphan"
+    )
     
     def to_dict(self):
         return {
@@ -31,5 +41,6 @@ class Job(db.Model):
             "description": self.description,
             "skills": self.skills,
             "experience": self.experience,
-            "created_by": self.created_by
+            "created_by": self.created_by,
+            "created_at": self.created_at.isoformat() if self.created_at else None
         }

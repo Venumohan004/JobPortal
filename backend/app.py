@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -19,6 +21,7 @@ from routes.admin import admin_bp
 # Email
 from utils.email_service import mail
 
+from flask import current_app
 
 app = Flask(__name__)
 
@@ -26,10 +29,17 @@ app = Flask(__name__)
 # Load configuration
 app.config.from_object(Config)
 
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+os.makedirs(app.config["RESUME_FOLDER"], exist_ok=True)
+os.makedirs(app.config["PROFILE_FOLDER"], exist_ok=True)
 
 # Extensions
 
-CORS(app)
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=True
+)
 
 db.init_app(app)
 

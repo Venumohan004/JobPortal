@@ -50,6 +50,10 @@ class Config:
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True
+    }
+
 
     # =========================
     # Mail Configuration
@@ -66,7 +70,12 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
-
+    
+    # Frontend URL
+    FRONTEND_URL = os.getenv(
+            "FRONTEND_URL",
+            "https://jobportal-aver.onrender.com"
+    )
 
     # =========================
     # Upload Folders

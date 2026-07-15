@@ -1,30 +1,21 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, request, jsonify, current_app
 
-from werkzeug.security import generate_password_hash, check_password_hash
-
-from models.user import User
-from models import db
-
-from flask_jwt_extended import create_access_token
- 
 import bcrypt
 
 from flask_jwt_extended import (
     create_access_token,
     jwt_required,
-    get_jwt_identity,
-    get_jwt
+    get_jwt_identity
 )
-from utils.email_service import send_email
 
+from models import db
+from models.user import User
+
+from utils.email_service import send_email
 from utils.token_helper import (
     generate_reset_token,
     verify_reset_token
 )
-from utils.token_helper import generate_reset_token
-
-from utils.token_helper import verify_reset_token
-import bcrypt
 
 auth = Blueprint("auth", __name__)
 
@@ -63,6 +54,11 @@ def register():
         password = data.get("password")
         phone = data.get("phone")
         role = data.get("role")
+
+        if role not in ["candidate", "recruiter", "admin"]:
+            return jsonify({
+                "message": "Invalid role"
+            }), 400
 
         if not all([full_name, email, password, role]):
             return jsonify({
@@ -130,8 +126,6 @@ def login():
                 "message": "Please send JSON data"
             }), 400
 
-        print("Received:", data)
-
         email = data.get("email")
         password = data.get("password")
 
@@ -174,21 +168,34 @@ def login():
 def profile():
 
     user_id = get_jwt_identity()
-    claims = get_jwt()
+
+    user = db.session.get(User, int(user_id))
+
+    if not user:
+        return jsonify({
+            "message": "User not found"
+        }), 404
 
     return jsonify({
         "message": "Protected Route Accessed Successfully",
         "user": {
-            "id": user_id,
-            "email": claims.get("email"),
-            "role": claims.get("role")
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "phone": user.phone,
+            "role": user.role
         }
     }), 200
 
 @auth.route("/forgot-password", methods=["POST"])
 def forgot_password():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+        "message": "Please send JSON data"
+    }), 400
 
     email = data.get("email")
 
@@ -206,7 +213,9 @@ def forgot_password():
 
     token = generate_reset_token(user.email)
 
-    reset_link = f"http://127.0.0.1:5000/reset-password/{token}"
+    reset_link = (
+        f"{current_app.config['FRONTEND_URL']}/reset-password/{token}"
+    )
 
     send_email(
         subject="Password Reset",
