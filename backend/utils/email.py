@@ -10,8 +10,10 @@ def send_email(subject, recipients, body):
             body=body
         )
         mail.send(msg)
-        return True
-
+        print("Email sent successfully")
     except Exception as e:
-        print(f"Email Error: {e}")
-        return False
+        print("========== EMAIL ERROR ==========")
+        print(type(e).__name__)
+        print(str(e))
+        print("================================")
+        raise

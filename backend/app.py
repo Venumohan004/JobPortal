@@ -19,7 +19,7 @@ from routes.saved_jobs import saved_bp
 from routes.admin import admin_bp
 
 # Email
-from utils.email_service import mail
+from utils.email import mail   # <-- Make sure this matches your send_email() file
 
 app = Flask(__name__)
 
@@ -114,7 +114,12 @@ def profile_page():
 def config_test():
     return {
         "SECRET_KEY": bool(app.config.get("SECRET_KEY")),
-        "JWT_SECRET_KEY": bool(app.config.get("JWT_SECRET_KEY"))
+        "JWT_SECRET_KEY": bool(app.config.get("JWT_SECRET_KEY")),
+        "MAIL_SERVER": app.config.get("MAIL_SERVER"),
+        "MAIL_PORT": app.config.get("MAIL_PORT"),
+        "MAIL_USERNAME": app.config.get("MAIL_USERNAME"),
+        "MAIL_DEFAULT_SENDER": app.config.get("MAIL_DEFAULT_SENDER"),
+        "MAIL_USE_TLS": app.config.get("MAIL_USE_TLS")
     }
 
 # =====================
