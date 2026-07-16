@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-
-from models import db, User, Job, Application
+from models import db, User, Job, Application, Candidate, Recruiter
 from utils.admin_required import admin_required
+from sqlalchemy.exc import SQLAlchemyError
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -14,10 +14,15 @@ def dashboard():
     """Return overall statistics for the admin dashboard."""
     return {
         "total_users": User.query.count(),
+        "total_candidates": User.query.filter_by(role="candidate").count(),
+        "total_recruiters": User.query.filter_by(role="recruiter").count(),
         "total_jobs": Job.query.count(),
-        "total_applications": Application.query.count()
+        "total_applications": Application.query.count(),
+        "applied": Application.query.filter_by(status="Applied").count(),
+        "shortlisted": Application.query.filter_by(status="Shortlisted").count(),
+        "selected": Application.query.filter_by(status="Selected").count(),
+        "rejected": Application.query.filter_by(status="Rejected").count()
     }
-
 
 @admin_bp.route("/users", methods=["GET"])
 @jwt_required()
@@ -66,15 +71,31 @@ def delete_user(id):
     if not user:
         return {"message": "User not found"}, 404
 
+    if user.role == "admin":
+        return {"message": "Admin account cannot be deleted"}, 400
+
     try:
+        Application.query.filter_by(candidate_id=user.id).delete()
+
+        Candidate.query.filter_by(user_id=user.id).delete()
+
+        jobs = Job.query.filter_by(created_by=user.id).all()
+
+        for job in jobs:
+            Application.query.filter_by(job_id=job.id).delete()
+
+        Job.query.filter_by(created_by=user.id).delete()
+
+        Recruiter.query.filter_by(user_id=user.id).delete()
+
         db.session.delete(user)
         db.session.commit()
-    except Exception:
+
+    except SQLAlchemyError:
         db.session.rollback()
         return {"message": "Failed to delete user"}, 500
 
     return {"message": "User deleted successfully"}
-
 
 @admin_bp.route("/jobs/<int:id>", methods=["DELETE"])
 @jwt_required()
@@ -88,9 +109,12 @@ def delete_job(id):
         return {"message": "Job not found"}, 404
 
     try:
+        Application.query.filter_by(job_id=job.id).delete()
+
         db.session.delete(job)
         db.session.commit()
-    except Exception:
+
+    except SQLAlchemyError:
         db.session.rollback()
         return {"message": "Failed to delete job"}, 500
 

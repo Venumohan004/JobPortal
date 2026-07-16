@@ -19,7 +19,7 @@ admin_bp = Blueprint("admin", __name__)
 @admin_bp.route("/admin/users", methods=["GET"])
 @jwt_required()
 def get_users():
-
+    """Return all registered users."""
     admin_id = int(get_jwt_identity())
     admin = db.session.get(User, admin_id)
 
@@ -33,6 +33,7 @@ def get_users():
         "users": [
             {
                 "id": user.id,
+                "full_name": user.full_name,
                 "email": user.email,
                 "role": user.role
             }
@@ -47,7 +48,7 @@ def get_users():
 @admin_bp.route("/admin/users/<int:user_id>", methods=["DELETE"])
 @jwt_required()
 def delete_user(user_id):
-
+    """Delete a user and all related records."""
     admin_id = int(get_jwt_identity())
     admin = db.session.get(User, admin_id)
 
@@ -62,26 +63,26 @@ def delete_user(user_id):
     if user.role == "admin":
         return jsonify({"message": "Admin account cannot be deleted"}), 400
 
-    # Delete candidate applications
-    Application.query.filter_by(candidate_id=user.id).delete()
+    try:
+        Application.query.filter_by(candidate_id=user.id).delete()
 
-    # Delete candidate profile
-    Candidate.query.filter_by(user_id=user.id).delete()
+        Candidate.query.filter_by(user_id=user.id).delete()
 
-    # Delete recruiter's jobs and their applications
-    jobs = Job.query.filter_by(created_by=user.id).all()
+        jobs = Job.query.filter_by(created_by=user.id).all()
 
-    for job in jobs:
-        Application.query.filter_by(job_id=job.id).delete()
+        for job in jobs:
+            Application.query.filter_by(job_id=job.id).delete()
 
-    Job.query.filter_by(created_by=user.id).delete()
+        Job.query.filter_by(created_by=user.id).delete()
 
-    # Delete recruiter profile
-    Recruiter.query.filter_by(user_id=user.id).delete()
+        Recruiter.query.filter_by(user_id=user.id).delete()
 
-    # Delete user
-    db.session.delete(user)
-    db.session.commit()
+        db.session.delete(user)
+        db.session.commit()
+
+    except Exception:
+        db.session.rollback()
+        return jsonify({"message": "Failed to delete user"}), 500
 
     return jsonify({
         "message": "User deleted successfully"
@@ -93,7 +94,7 @@ def delete_user(user_id):
 @admin_bp.route("/admin/dashboard", methods=["GET"])
 @jwt_required()
 def admin_dashboard():
-
+    """Return dashboard statistics for administrators."""
     admin_id = int(get_jwt_identity())
     admin = db.session.get(User, admin_id)
 
@@ -110,59 +111,58 @@ def admin_dashboard():
     total_jobs = Job.query.count()
     total_applications = Application.query.count()
 
-    pending = Application.query.filter_by(status="Pending").count()
-    accepted = Application.query.filter_by(status="Accepted").count()
+    applied = Application.query.filter_by(status="Applied").count()
+    shortlisted = Application.query.filter_by(status="Shortlisted").count()
+    selected = Application.query.filter_by(status="Selected").count()
     rejected = Application.query.filter_by(status="Rejected").count()
 
     # Latest Users
     latest_users = User.query.order_by(User.id.desc()).limit(5).all()
 
-    users = []
-
-    for user in latest_users:
-        users.append({
+    users = [
+        {
             "id": user.id,
-            "full_name": user.full_name, # Replace with user.username if needed
+            "full_name": user.full_name,
             "email": user.email,
             "role": user.role
-        })
-
+        }
+        for user in latest_users
+    ]
     # Latest Jobs
     latest_jobs = Job.query.order_by(Job.id.desc()).limit(5).all()
 
-    jobs = []
-
-    for job in latest_jobs:
-        jobs.append({
+    jobs = [
+        {
             "id": job.id,
             "title": job.title,
             "company": job.company,
             "location": job.location
-        })
-
+        }
+        for job in latest_jobs
+    ]
     # Latest Applications
     latest_applications = Application.query.order_by(Application.id.desc()).limit(5).all()
 
-    applications = []
-
-    for application in latest_applications:
-        applications.append({
-            "id": application.id,
-            "candidate_id": application.candidate_id,
-            "job_id": application.job_id,
-            "status": application.status
-        })
-
+    applications = [
+            {
+                    "id": application.id,
+                    "candidate_id": application.candidate_id,
+                    "job_id": application.job_id,
+                    "status": application.status
+             }
+    for application in latest_applications
+    ]
     return jsonify({
 
-        "statistics": {
+            "statistics": {
             "total_users": total_users,
             "total_recruiters": total_recruiters,
             "total_candidates": total_candidates,
             "total_jobs": total_jobs,
             "total_applications": total_applications,
-            "pending": pending,
-            "accepted": accepted,
+            "applied": applied,
+            "shortlisted": shortlisted,
+            "selected": selected,
             "rejected": rejected
         },
 
@@ -209,7 +209,7 @@ def application_report():
 @admin_bp.route("/admin/reports/recruiters", methods=["GET"])
 @jwt_required()
 def recruiter_report():
-
+    """Return the number of jobs posted by each recruiter."""
     admin_id = int(get_jwt_identity())
     admin = db.session.get(User, admin_id)
 
@@ -384,6 +384,7 @@ def get_all_applications():
 @admin_bp.route("/admin/jobs/<int:job_id>", methods=["DELETE"])
 @jwt_required()
 def delete_job(job_id):
+    """Delete a job and all its applications."""
 
     admin = db.session.get(User, int(get_jwt_identity()))
 
@@ -395,10 +396,17 @@ def delete_job(job_id):
     if not job:
         return jsonify({"message": "Job not found"}), 404
 
-    Application.query.filter_by(job_id=job.id).delete()
+    try:
+        # Delete all applications for this job
+        Application.query.filter_by(job_id=job.id).delete()
 
-    db.session.delete(job)
-    db.session.commit()
+        # Delete the job
+        db.session.delete(job)
+        db.session.commit()
+
+    except Exception:
+        db.session.rollback()
+        return jsonify({"message": "Failed to delete job"}), 500
 
     return jsonify({
         "message": "Job deleted successfully"
