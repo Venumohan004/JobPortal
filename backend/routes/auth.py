@@ -11,7 +11,7 @@ from flask_jwt_extended import (
 from models import db
 from models.user import User
 
-from utils.email_service import send_email
+from utils.email import send_email
 from utils.token_helper import (
     generate_reset_token,
     verify_reset_token
