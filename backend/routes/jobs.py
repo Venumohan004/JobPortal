@@ -33,7 +33,8 @@ def create_job():
             "title",
             "company",
             "location",
-            "salary",
+            "min_salary",
+            "max_salary",
             "description"
         ]
 
@@ -48,7 +49,9 @@ def create_job():
             title=data["title"],
             company=data["company"],
             location=data["location"],
-            salary=data["salary"],
+            min_salary=data["min_salary"],
+            max_salary=data["max_salary"],
+            job_type=data.get("job_type"),
             description=data["description"],
             skills=data.get("skills"),
             experience=data.get("experience"),
@@ -120,16 +123,16 @@ def get_jobs():
         query = query.filter(Job.title.ilike(f"%{title}%"))
 
     if min_salary is not None:
-        query = query.filter(Job.salary >= min_salary)
+        query = query.filter(Job.min_salary >= min_salary)
 
     if max_salary is not None:
-        query = query.filter(Job.salary <= max_salary)
+        query = query.filter(Job.max_salary <= max_salary)
 
     if sort == "salary_asc":
-        query = query.order_by(Job.salary.asc())
+        query = query.order_by(Job.min_salary.asc())
 
     elif sort == "salary_desc":
-        query = query.order_by(Job.salary.desc())
+        query = query.order_by(Job.max_salary.desc())
 
     elif sort == "latest":
         query = Job.query.order_by(Job.created_at.desc())
@@ -248,7 +251,7 @@ def jobs_by_location(location):
 
 @jobs_bp.route("/jobs/salary/<int:salary>", methods=["GET"])
 def jobs_by_salary(salary):
-    jobs = Job.query.filter(Job.salary >= salary).all()
+    jobs = Job.query.filter(Job.min_salary >= salary).all()
 
     return jsonify({
         "count": len(jobs),
@@ -480,7 +483,9 @@ def update_job(id):
     job.title = data.get("title", job.title)
     job.company = data.get("company", job.company)
     job.location = data.get("location", job.location)
-    job.salary = data.get("salary", job.salary)
+    job.min_salary = data.get("min_salary", job.min_salary)
+    job.max_salary = data.get("max_salary", job.max_salary)
+    job.job_type = data.get("job_type", job.job_type)
     job.description = data.get("description", job.description)
     job.skills = data.get("skills", job.skills)
     job.experience = data.get("experience", job.experience)
