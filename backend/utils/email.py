@@ -2,7 +2,6 @@ from flask_mail import Mail, Message
 
 mail = Mail()
 
-
 def send_email(subject, recipients, body):
     try:
         msg = Message(
@@ -11,7 +10,8 @@ def send_email(subject, recipients, body):
             body=body
         )
         mail.send(msg)
-        print("Email sent successfully.")
+        return True
 
     except Exception as e:
         print(f"Email Error: {e}")
+        return False
