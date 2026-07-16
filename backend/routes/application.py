@@ -203,10 +203,11 @@ def update_application_status(id):
 
     job = Job.query.get(application.job_id)
 
-    send_email(
-    subject="Application Status Updated",
-    recipients=[candidate.email],
-    body=f"""
+    try:
+        send_email(
+            subject="Application Status Updated",
+            recipients=[candidate.email],
+            body=f"""
             Hello {candidate.full_name},
 
             Your application status has been updated.
@@ -222,7 +223,10 @@ def update_application_status(id):
             Best Regards,
             Job Portal Team
             """
-            )
+        )
+    except Exception as e:
+        print(f"Email sending failed: {e}")
+        
     return jsonify({
             "message": "Application status updated successfully",
             "application": application.to_dict()

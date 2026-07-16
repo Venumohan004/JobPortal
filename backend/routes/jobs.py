@@ -135,7 +135,7 @@ def get_jobs():
         query = query.order_by(Job.max_salary.desc())
 
     elif sort == "latest":
-        query = Job.query.order_by(Job.created_at.desc())
+        query = query.order_by(Job.created_at.desc())
 
     elif sort == "oldest":
         query = query.order_by(Job.id.asc())
