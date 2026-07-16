@@ -165,7 +165,6 @@ def update_application_status(id):
             "message": "Only recruiters can update application status"
         }), 403
 
-    # First fetch application
     application = Application.query.get(id)
 
     if not application:
@@ -173,7 +172,6 @@ def update_application_status(id):
             "message": "Application not found"
         }), 404
 
-    # Then fetch job
     job = Job.query.get(application.job_id)
 
     if job.created_by != int(get_jwt_identity()):
@@ -182,6 +180,11 @@ def update_application_status(id):
         }), 403
 
     data = request.get_json()
+
+    if not data or "status" not in data:
+        return jsonify({
+            "message": "Status is required"
+        }), 400
 
     allowed_status = [
         "Applied",
@@ -197,40 +200,47 @@ def update_application_status(id):
 
     application.status = data["status"]
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "message": "Failed to update application status",
+            "error": str(e)
+        }), 500
 
     candidate = User.query.get(application.candidate_id)
 
-    job = Job.query.get(application.job_id)
-
     try:
-        # send_email(
-        #     subject="Application Status Updated",
-        #     recipients=[candidate.email],
-        #     body=f"""
-        #     Hello {candidate.full_name},
+        send_email(
+            subject="Application Status Updated",
+            recipients=[candidate.email],
+            body=f"""
+            Hello {candidate.full_name},
 
-        #     Your application status has been updated.
+            Your application status has been updated.
 
-        #     Job Title:
-        #     {job.title}
+            Job Title:
+            {job.title}
 
-        #     Current Status:
-        #     {application.status}
+            Current Status:
+            {application.status}
 
-        #     Please log in to your Job Portal account to view more details.
+            Please log in to your Job Portal account to view more details.
 
-        #     Best Regards,
-        #     Job Portal Team
-        #     """
-        # )
-        print("Status updated successfully")
+            Best Regards,
+            Job Portal Team
+            """
+                    )
+        print("Email sent successfully.")
+
     except Exception as e:
-        # print(f"Email sending failed: {e}")
-        print("Candidate Email:", candidate.email)
+        print("========== EMAIL ERROR ==========")
+        print(e)
+        print("=================================")
+        # Do NOT return an error here
 
     return jsonify({
-            "message": "Application status updated successfully",
-            "application": application.to_dict()
-         }), 200
-    
+        "message": "Application status updated successfully",
+        "application": application.to_dict()
+    }), 200
