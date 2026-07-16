@@ -3,7 +3,7 @@ from datetime import datetime
 
 
 class User(db.Model):
-
+    """Represents a registered user in the job portal."""
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -61,7 +61,7 @@ class User(db.Model):
 
     applications = db.relationship(
         "Application",
-        backref="candidate",
+        back_populates="candidate",
         lazy=True
     )
 
@@ -75,8 +75,23 @@ class User(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        default=datetime.utcnow,
+        nullable=False
     )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "full_name": self.full_name,
+            "email": self.email,
+            "phone": self.phone,
+            "role": self.role,
+            "location": self.location,
+            "bio": self.bio,
+            "resume": self.resume,
+            "profile_image": self.profile_image,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
 
     def __repr__(self):
         return f"<User {self.email}>"

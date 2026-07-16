@@ -4,7 +4,7 @@ from flask_jwt_extended import get_jwt
 
 
 def candidate_required(fn):
-
+    """Allow access only to users with the candidate role."""
     @wraps(fn)
     def wrapper(*args, **kwargs):
 
@@ -12,7 +12,7 @@ def candidate_required(fn):
 
         if claims.get("role") != "candidate":
             return jsonify({
-                "message": "Only candidates allowed"
+                "message": "Access denied. Candidate role required."
             }), 403
 
         return fn(*args, **kwargs)

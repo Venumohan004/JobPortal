@@ -21,19 +21,30 @@ from routes.admin import admin_bp
 # Email
 from utils.email_service import mail
 
-from flask import current_app
-
 app = Flask(__name__)
 
+# =====================
+# Load Configuration
+# =====================
 
-# Load configuration
 app.config.from_object(Config)
+
+# =====================
+# Create Upload Folders
+# =====================
 
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(app.config["RESUME_FOLDER"], exist_ok=True)
 os.makedirs(app.config["PROFILE_FOLDER"], exist_ok=True)
 
-# Extensions
+# =====================
+# Initialize Extensions
+# =====================
+
+db.init_app(app)
+jwt = JWTManager(app)
+mail.init_app(app)
+migrate = Migrate(app, db)
 
 CORS(
     app,
@@ -41,35 +52,18 @@ CORS(
     supports_credentials=True
 )
 
-db.init_app(app)
-
-migrate = Migrate(app, db)
-
-jwt = JWTManager(app)
-
-mail.init_app(app)
-
-
-
+# =====================
 # Register Blueprints
+# =====================
 
 app.register_blueprint(auth)
-
 app.register_blueprint(candidate)
-
 app.register_blueprint(recruiter_bp)
-
 app.register_blueprint(jobs_bp)
-
 app.register_blueprint(application_bp)
-
 app.register_blueprint(resume_bp)
-
 app.register_blueprint(saved_bp)
-
 app.register_blueprint(admin_bp)
-
-
 
 # =====================
 # Basic Routes
@@ -81,8 +75,6 @@ def home():
         "message": "Job Portal Backend is Running",
         "status": "success"
     }
-
-
 
 # =====================
 # Frontend Pages
@@ -126,12 +118,26 @@ def config_test():
     }
 
 # =====================
+# Error Handlers
+# =====================
+
+@app.errorhandler(404)
+def not_found(_):
+    return {"message": "Not Found"}, 404
+
+
+@app.errorhandler(500)
+def server_error(_):
+    db.session.rollback()
+    return {"message": "Internal Server Error"}, 500
+
+# =====================
 # Run Application
 # =====================
 
 if __name__ == "__main__":
-
     app.run(
         host="0.0.0.0",
-        port=5000
+        port=5000,
+        debug=False
     )
