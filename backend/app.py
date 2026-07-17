@@ -122,26 +122,16 @@ def config_test():
         "MAIL_DEFAULT_SENDER": app.config.get("MAIL_DEFAULT_SENDER"),
         "MAIL_USE_TLS": app.config.get("MAIL_USE_TLS")
     }
-
 @app.route("/test-email")
 def test_email():
+    import socket
+
     try:
-        send_email(
-            subject="Test Email",
-            recipients=["pvenumohan831@gmail.com"],
-            body="This is a test email from Job Portal"
-        )
-
-        return {
-            "message": "Email sent"
-        }, 200
-
+        socket.create_connection(("smtp.gmail.com", 587), timeout=10)
+        return {"message": "SMTP reachable"}, 200
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-
         return {
-            "message": "Email failed",
+            "message": "SMTP connection failed",
             "error": str(e),
             "type": type(e).__name__
         }, 500
