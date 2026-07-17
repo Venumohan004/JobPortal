@@ -162,15 +162,18 @@ def not_found(_):
 #     return {"message": "Internal Server Error"}, 500
 
 @app.errorhandler(500)
-def server_error(e):
+def server_error(error):
     import traceback
+
+    print("========== SERVER ERROR ==========")
     traceback.print_exc()
+    print("ERROR:", error)
 
     db.session.rollback()
 
     return {
         "message": "Internal Server Error",
-        "error": str(e)
+        "error": str(error)
     }, 500
 
 # =====================
