@@ -66,13 +66,21 @@ def create_recruiter():
     user_id=user_id
     )
 
-    db.session.add(recruiter)
-    db.session.commit()
+    try:
+        db.session.add(recruiter)
+        db.session.commit()
 
-    return jsonify({
-        "message": "Recruiter Profile Created",
-        "recruiter": recruiter.to_dict()
-    }), 201
+        return jsonify({
+            "message": "Recruiter Profile Created",
+            "recruiter": recruiter.to_dict()
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+
+        return jsonify({
+            "error": str(e)
+        }), 500
 
 @recruiter_bp.route("/recruiter/profile", methods=["GET"])
 @jwt_required()
