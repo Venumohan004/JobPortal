@@ -5,6 +5,10 @@ import traceback
 mail = Mail()
 
 def send_email(subject, recipients, body):
+    print("===== EMAIL START =====")
+    print("Sender:", current_app.config.get("MAIL_DEFAULT_SENDER"))
+    print("Recipients:", recipients)
+
     try:
         msg = Message(
             subject=subject,
@@ -16,8 +20,7 @@ def send_email(subject, recipients, body):
         mail.send(msg)
         print("✅ Email sent successfully")
 
-    except Exception as e:
-        print("========== EMAIL ERROR ==========")
+    except Exception:
+        print("===== EMAIL FAILED =====")
         traceback.print_exc()
-        print(e)
         raise
