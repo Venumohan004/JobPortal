@@ -16,8 +16,8 @@ def apply_job(job_id):
 
     if claims["role"] != "candidate":
         return jsonify({
-        "message": "Only candidates can apply for jobs."
-    }), 403
+            "message": "Only candidates can apply for jobs."
+        }), 403
 
     candidate_id = int(get_jwt_identity())
 
@@ -25,53 +25,63 @@ def apply_job(job_id):
 
     if not job:
         return jsonify({
-        "message": "Job not found"
-    }), 404
-    print("JWT Candidate ID:", candidate_id)
-    print("Job ID:", job_id)
+            "message": "Job not found"
+        }), 404
 
     existing_application = Application.query.filter_by(
-    candidate_id= candidate_id,
-    job_id=job_id
-    ).first()
-    print("Existing Application:", existing_application)
-
-    if existing_application:
-       return jsonify({
-        "message": "You have already applied for this job."
-    }), 400
-
-    application = Application(
         candidate_id=candidate_id,
         job_id=job_id
-    )
+    ).first()
 
-    db.session.add(application)
-    db.session.commit()
+    if existing_application:
+        return jsonify({
+            "message": "You have already applied for this job."
+        }), 400
 
-    job = Job.query.get(job_id)
-
-    recruiter = User.query.get(job.created_by)
-
-    candidate = User.query.get(candidate_id)
-
-    send_email(
-        subject="New Job Application",
-        recipients=[recruiter.email],
-        body=f"""
-        Hello Recruiter,
-
-        A new candidate has applied.
-
-        Candidate:
-        {candidate.full_name}
-
-        Job:
-        {job.title}
-
-        Please login to review the application.
-        """
+    try:
+        application = Application(
+            candidate_id=candidate_id,
+            job_id=job_id
         )
+
+        db.session.add(application)
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "message": "Failed to apply for job",
+            "error": str(e)
+        }), 500
+
+    # Send email (do not fail the API if email sending fails)
+    try:
+        recruiter = User.query.get(job.created_by)
+        candidate = User.query.get(candidate_id)
+
+        if recruiter and candidate:
+            send_email(
+                subject="New Job Application",
+                recipients=[recruiter.email],
+                body=f"""
+                Hello Recruiter,
+
+                A new candidate has applied for your job.
+
+                Candidate Name: {candidate.full_name}
+                Candidate Email: {candidate.email}
+
+                Job Title: {job.title}
+
+                Please login to your Job Portal account to review the application.
+
+                Thank you,
+                Job Portal Team
+                """
+            )
+
+    except Exception as e:
+        print("Email Error:", e)
 
     return jsonify({
         "message": "Job Applied Successfully",
