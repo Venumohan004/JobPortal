@@ -146,6 +146,15 @@ def test_email():
             "error": str(e),
             "type": type(e).__name__
         }, 500
+    
+@app.route("/mail-check")
+def mail_check():
+    return {
+        "mail_object": str(mail),
+        "sender": app.config.get("MAIL_DEFAULT_SENDER"),
+        "username": app.config.get("MAIL_USERNAME"),
+        "password_exists": bool(app.config.get("MAIL_PASSWORD"))
+    }
 
 # =====================
 # Error Handlers
