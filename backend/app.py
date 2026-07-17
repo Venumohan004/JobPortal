@@ -111,6 +111,10 @@ def profile_page():
     return render_template("profile.html")
 
 
+# =====================
+# Configuration Test
+# =====================
+
 @app.route("/config-test")
 def config_test():
     return {
@@ -122,28 +126,6 @@ def config_test():
         "MAIL_DEFAULT_SENDER": app.config.get("MAIL_DEFAULT_SENDER"),
         "MAIL_USE_TLS": app.config.get("MAIL_USE_TLS")
     }
-@app.route("/test-email")
-def test_email():
-    import socket
-
-    try:
-        socket.create_connection(("smtp.gmail.com", 587), timeout=10)
-        return {"message": "SMTP reachable"}, 200
-    except Exception as e:
-        return {
-            "message": "SMTP connection failed",
-            "error": str(e),
-            "type": type(e).__name__
-        }, 500
-    
-@app.route("/mail-check")
-def mail_check():
-    return {
-        "mail_object": str(mail),
-        "sender": app.config.get("MAIL_DEFAULT_SENDER"),
-        "username": app.config.get("MAIL_USERNAME"),
-        "password_exists": bool(app.config.get("MAIL_PASSWORD"))
-    }
 
 # =====================
 # Error Handlers
@@ -154,25 +136,15 @@ def not_found(_):
     return {"message": "Not Found"}, 404
 
 
-# @app.errorhandler(500)
-# def server_error(_):
-#     db.session.rollback()
-#     return {"message": "Internal Server Error"}, 500
-
 @app.errorhandler(500)
 def server_error(error):
-    import traceback
-
-    print("========== SERVER ERROR ==========")
-    traceback.print_exc()
-    print("ERROR:", error)
-
     db.session.rollback()
 
     return {
         "message": "Internal Server Error",
         "error": str(error)
     }, 500
+
 
 # =====================
 # Run Application
