@@ -125,26 +125,40 @@ def config_test():
 
 @app.route("/test-email")
 def test_email():
+
     import traceback
 
+    print("===== TEST EMAIL ROUTE START =====")
+
     try:
+
+        print("Before send_email")
+
         send_email(
             subject="Test Email",
             recipients=["pvenumohan831@gmail.com"],
-            body="This is a test email from Job Portal."
+            body="Testing email from Job Portal"
         )
+
+        print("After send_email")
 
         return {
             "message": "Email sent successfully"
         }, 200
 
+
     except Exception as e:
+
+        print("===== TEST EMAIL ERROR =====")
+        print(type(e).__name__)
+        print(str(e))
+
         traceback.print_exc()
 
         return {
             "message": "Email failed",
-            "error": str(e),
-            "type": type(e).__name__
+            "error_type": type(e).__name__,
+            "error": str(e)
         }, 500
     
 @app.route("/mail-check")

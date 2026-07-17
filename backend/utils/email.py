@@ -55,4 +55,4 @@ def send_email(subject, recipients, body):
 
         traceback.print_exc()
 
-        raise e
+        raise 
