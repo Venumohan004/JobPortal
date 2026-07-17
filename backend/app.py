@@ -156,10 +156,22 @@ def not_found(_):
     return {"message": "Not Found"}, 404
 
 
+# @app.errorhandler(500)
+# def server_error(_):
+#     db.session.rollback()
+#     return {"message": "Internal Server Error"}, 500
+
 @app.errorhandler(500)
-def server_error(_):
+def server_error(e):
+    import traceback
+    traceback.print_exc()
+
     db.session.rollback()
-    return {"message": "Internal Server Error"}, 500
+
+    return {
+        "message": "Internal Server Error",
+        "error": str(e)
+    }, 500
 
 # =====================
 # Run Application
