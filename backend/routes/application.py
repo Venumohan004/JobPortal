@@ -47,6 +47,9 @@ def apply_job(job_id):
         db.session.add(application)
         db.session.commit()
 
+        # Refresh object after commit
+        db.session.refresh(application)
+
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -54,7 +57,7 @@ def apply_job(job_id):
             "error": str(e)
         }), 500
 
-    # Send email (do not fail the API if email sending fails)
+    # Send email (optional)
     try:
         recruiter = User.query.get(job.created_by)
         candidate = User.query.get(candidate_id)
@@ -77,7 +80,7 @@ def apply_job(job_id):
 
                 Thank you,
                 Job Portal Team
-                """
+            """
             )
 
     except Exception as e:
