@@ -20,6 +20,7 @@ from routes.admin import admin_bp
 
 # Email
 from utils.email import mail   # <-- Make sure this matches your send_email() file
+from utils.email import send_email
 
 app = Flask(__name__)
 
@@ -121,6 +122,22 @@ def config_test():
         "MAIL_DEFAULT_SENDER": app.config.get("MAIL_DEFAULT_SENDER"),
         "MAIL_USE_TLS": app.config.get("MAIL_USE_TLS")
     }
+
+@app.route("/test-email")
+def test_email():
+    try:
+        send_email(
+            subject="Test Email",
+            recipients=["pvenumohan831@gmail.com"],
+            body="This is a test email from Job Portal."
+        )
+        return {"message": "Email sent successfully"}, 200
+
+    except Exception as e:
+        return {
+            "message": "Email failed",
+            "error": str(e)
+        }, 500
 
 # =====================
 # Error Handlers
