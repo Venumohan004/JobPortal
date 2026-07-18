@@ -36,8 +36,7 @@ class Resume(db.Model):
     )
 
     candidate = db.relationship(
-        "User",
-        backref=db.backref("resume", uselist=False)
+        "User"
     )
 
     def to_dict(self):

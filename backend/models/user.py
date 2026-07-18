@@ -4,6 +4,7 @@ from datetime import datetime
 
 class User(db.Model):
     """Represents a registered user in the job portal."""
+
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -26,7 +27,6 @@ class User(db.Model):
     )
 
     phone = db.Column(db.String(20))
-
 
     role = db.Column(
         db.Enum(
@@ -65,6 +65,7 @@ class User(db.Model):
         lazy=True
     )
 
+    # Stores profile resume path (optional)
     resume = db.Column(db.String(255))
 
     profile_image = db.Column(db.String(255))
@@ -90,7 +91,7 @@ class User(db.Model):
             "bio": self.bio,
             "resume": self.resume,
             "profile_image": self.profile_image,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
     def __repr__(self):
