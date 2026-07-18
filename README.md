@@ -31,6 +31,22 @@
 - Alembic Migrations
 - Render Deployment
 
+## 🚀 Project Features
+
+- 🔐 JWT Authentication & Authorization
+- 👤 Candidate & Recruiter Management
+- 💼 Job Posting & Job Search
+- 📄 Resume Upload & Download
+- ❤️ Saved Jobs
+- 👀 Recently Viewed Jobs
+- 📋 Job Applications
+- 🎯 Interview Scheduling
+- 📊 Admin Dashboard
+- 📧 Email Notifications
+- 🔍 Search, Filtering & Pagination
+- ☁️ Render Deployment
+- 🐘 PostgreSQL Database
+
 A **production-ready RESTful Job Portal Backend API** developed using:
 
 - Python
