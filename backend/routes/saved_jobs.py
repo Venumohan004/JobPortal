@@ -1,52 +1,119 @@
-from flask import Blueprint, request, jsonify
+import traceback
+from flask import Blueprint, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
 from models import db
 from models.saved_job import SavedJob
+from models.job import Job
 
 saved_bp = Blueprint("saved", __name__)
 
-@saved_bp.route("/save-job", methods=["POST"])
-def save_job():
-    data = request.get_json()
 
-    # prevent duplicates
-    existing = SavedJob.query.filter_by(
-        candidate_id=data["candidate_id"],
-        job_id=data["job_id"]
-    ).first()
+# ==========================================================
+# Save Job
+# ==========================================================
+@saved_bp.route("/save-job/<int:job_id>", methods=["POST"])
+@jwt_required()
+def save_job(job_id):
+    try:
 
-    if existing:
-        return jsonify({"message": "Job already saved"}), 400
+        candidate_id = get_jwt_identity()
 
-    saved = SavedJob(
-        candidate_id=data["candidate_id"],
-        job_id=data["job_id"]
-    )
+        job = Job.query.get(job_id)
 
-    db.session.add(saved)
-    db.session.commit()
+        if not job:
+            return jsonify({
+                "message": "Job not found"
+            }), 404
 
-    return jsonify({"message": "Job saved successfully"}), 201
+        existing = SavedJob.query.filter_by(
+            candidate_id=candidate_id,
+            job_id=job_id
+        ).first()
 
-@saved_bp.route("/saved-jobs/<int:candidate_id>", methods=["GET"])
-def get_saved_jobs(candidate_id):
-    jobs = SavedJob.query.filter_by(candidate_id=candidate_id).all()
+        if existing:
+            return jsonify({
+                "message": "Job already saved"
+            }), 400
+
+        saved_job = SavedJob(
+            candidate_id=candidate_id,
+            job_id=job_id
+        )
+
+        db.session.add(saved_job)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Job saved successfully",
+            "saved_job": saved_job.to_dict()
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        traceback.print_exc()
+
+        return jsonify({
+            "message": "Internal Server Error",
+            "error": str(e)
+        }), 500
+
+
+# ==========================================================
+# Get Saved Jobs
+# ==========================================================
+@saved_bp.route("/saved-jobs", methods=["GET"])
+@jwt_required()
+def get_saved_jobs():
+
+    candidate_id = get_jwt_identity()
+
+    saved_jobs = SavedJob.query.filter_by(
+        candidate_id=candidate_id
+    ).all()
 
     return jsonify({
-        "count": len(jobs),
+        "count": len(saved_jobs),
         "saved_jobs": [
-            {"job_id": j.job_id, "candidate_id": j.candidate_id}
-            for j in jobs
+            job.to_dict()
+            for job in saved_jobs
         ]
     }), 200
 
+
+# ==========================================================
+# Delete Saved Job
+# ==========================================================
 @saved_bp.route("/saved-jobs/<int:id>", methods=["DELETE"])
+@jwt_required()
 def delete_saved_job(id):
-    saved = SavedJob.query.get(id)
 
-    if not saved:
-        return jsonify({"message": "Not found"}), 404
+    try:
 
-    db.session.delete(saved)
-    db.session.commit()
+        candidate_id = get_jwt_identity()
 
-    return jsonify({"message": "Removed successfully"}), 200
+        saved_job = SavedJob.query.filter_by(
+            id=id,
+            candidate_id=candidate_id
+        ).first()
+
+        if not saved_job:
+            return jsonify({
+                "message": "Saved job not found"
+            }), 404
+
+        db.session.delete(saved_job)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Saved job removed successfully"
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        traceback.print_exc()
+
+        return jsonify({
+            "message": "Internal Server Error",
+            "error": str(e)
+        }), 500

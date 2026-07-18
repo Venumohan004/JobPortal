@@ -3,10 +3,14 @@ from flask_jwt_extended import jwt_required
 from models import db, User, Job, Application, Candidate, Recruiter
 from utils.admin_required import admin_required
 from sqlalchemy.exc import SQLAlchemyError
+from models.resume import Resume
+from models.saved_job import SavedJob
+from flask import jsonify
+import traceback
 
 admin_bp = Blueprint("admin", __name__)
 
-
+ 
 @admin_bp.route("/dashboard", methods=["GET"])
 @jwt_required()
 @admin_required
@@ -75,10 +79,13 @@ def delete_user(id):
         return {"message": "Admin account cannot be deleted"}, 400
 
     try:
+      # Delete candidate related data
         Application.query.filter_by(candidate_id=user.id).delete()
+        SavedJob.query.filter_by(candidate_id=user.id).delete()
+        Resume.query.filter_by(candidate_id=user.id).delete()
 
         Candidate.query.filter_by(user_id=user.id).delete()
-
+        
         jobs = Job.query.filter_by(created_by=user.id).all()
 
         for job in jobs:
@@ -92,10 +99,13 @@ def delete_user(id):
         db.session.commit()
 
     except SQLAlchemyError:
+        traceback.print_exc()
         db.session.rollback()
         return {"message": "Failed to delete user"}, 500
 
-    return {"message": "User deleted successfully"}
+    return jsonify({
+        "message": "User deleted successfully"
+    }), 200
 
 @admin_bp.route("/jobs/<int:id>", methods=["DELETE"])
 @jwt_required()
@@ -110,11 +120,13 @@ def delete_job(id):
 
     try:
         Application.query.filter_by(job_id=job.id).delete()
-
+        SavedJob.query.filter_by(job_id=job.id).delete()
+        
         db.session.delete(job)
         db.session.commit()
 
     except SQLAlchemyError:
+        traceback.print_exc()
         db.session.rollback()
         return {"message": "Failed to delete job"}, 500
 
