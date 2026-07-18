@@ -17,6 +17,7 @@ from routes.application import application_bp
 from routes.resume import resume_bp
 from routes.saved_jobs import saved_bp
 from routes.admin import admin_bp
+from routes.interview import interview_bp
 
 # Email
 from utils.email import mail   # <-- Make sure this matches your send_email() file
@@ -65,6 +66,7 @@ app.register_blueprint(application_bp)
 app.register_blueprint(resume_bp)
 app.register_blueprint(saved_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(interview_bp, url_prefix="/interviews")
 
 # =====================
 # Basic Routes
