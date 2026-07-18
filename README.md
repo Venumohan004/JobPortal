@@ -1,13 +1,16 @@
 # 🚀 JobPortal – RESTful Backend API
 
+
 <p align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue?style=for-the-badge&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-REST%20API-black?style=for-the-badge&logo=flask)
-![MySQL](https://img.shields.io/badge/MySQL-Database-blue?style=for-the-badge&logo=mysql)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue?style=for-the-badge&logo=postgresql)
 ![JWT](https://img.shields.io/badge/JWT-Authentication-green?style=for-the-badge)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-red?style=for-the-badge)
+![Render](https://img.shields.io/badge/Render-Deployed-46E3B7?style=for-the-badge&logo=render)
 ![GitHub](https://img.shields.io/badge/Open%20Source-GitHub-black?style=for-the-badge&logo=github)
+![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
 </p>
@@ -16,11 +19,23 @@
 
 # 💼 JobPortal Backend API
 
+## 📊 Project Highlights
+
+- RESTful API Architecture
+- JWT Authentication
+- Role-Based Authorization
+- PostgreSQL Database
+- Resume Management
+- Interview Scheduling
+- Flask-Mail Integration
+- Alembic Migrations
+- Render Deployment
+
 A **production-ready RESTful Job Portal Backend API** developed using:
 
 - Python
 - Flask
-- MySQL
+- PostgreSQL
 - SQLAlchemy ORM
 - Flask-JWT-Extended
 - Flask-Mail
@@ -73,6 +88,8 @@ The project follows a modular architecture using:
 - [Environment Configuration](#environment-configuration)
 - [Database Migration](#database-migration)
 - [Running Application](#running-application)
+- [Deployment](#deployment)
+- [Interview Management](#interview-management)
 - [API Modules](#api-modules)
 - [API Endpoints](#api-endpoints)
 - [Security](#security)
@@ -130,10 +147,13 @@ The project follows a modular architecture using:
 - Accept Candidates
 - Reject Candidates
 - Shortlist Candidates
+- Schedule Interviews
+- Update Interviews
+- Delete Interviews
+- View Interviews
 - Recruiter Dashboard
 - Hiring Analytics
-
-
+  
 ---
 
 # 👑 Admin Features
@@ -175,7 +195,22 @@ The project follows a modular architecture using:
 - PDF Validation
 - Secure File Storage
 
+---
 
+# 🎯 Interview Management
+
+- Schedule Interview
+- View All Interviews
+- View Interview Details
+- Update Interview
+- Delete Interview
+- Google Meet / Zoom Meeting Support
+- Recruiter Authorization
+- Interview Tracking
+- Recruiter-only Interview Scheduling
+- JWT Protected Interview APIs
+- Recruiter can schedule interviews only for job applicants
+- Candidates can view interview details
 ---
 
 # ❤️ Saved Jobs
@@ -196,7 +231,6 @@ The project follows a modular architecture using:
 ---
 
 # 🏗️ Architecture
-
 
 ```
               Client
@@ -220,7 +254,7 @@ Routes       Services        Models
 
              Database
 
-              MySQL
+              PostgreSQL
 
 ```
 
@@ -232,7 +266,7 @@ Routes       Services        Models
 |----------|------------|
 | Programming Language | Python 3.12 |
 | Backend Framework | Flask |
-| Database | MySQL |
+| Database | PostgreSQL |
 | ORM | SQLAlchemy |
 | Authentication | Flask-JWT-Extended |
 | Email Service | Flask-Mail |
@@ -257,6 +291,7 @@ backend/
 │   ├── recruiter.py
 │   ├── job.py
 │   ├── application.py
+│   ├── interview.py
 │   ├── resume.py
 │   ├── saved_job.py
 │   └── recently_viewed_job.py
@@ -267,6 +302,7 @@ backend/
 │   ├── recruiter.py
 │   ├── jobs.py
 │   ├── application.py
+│   ├── interview.py
 │   ├── resume.py
 │   └── admin.py
 │
@@ -295,30 +331,24 @@ backend/
 
 ```
                  User
-
                   |
+        -------------------
+        |                 |
+   Candidate          Recruiter
+        |                 |
+        |                 |
+     Application ---- Job
+          |
+          |
+      Interview
 
-      ----------------------------
 
-      |            |             |
-
- Candidate    Recruiter        Job
-
-                  |
-
-              Application
-
-                  |
-
-              SavedJob
-
-                  |
-
-        RecentlyViewedJob
+     SavedJob
+          |
+          |
+ RecentlyViewedJob
 
 ```
-
----
 
 # ⚙️ Installation
 
@@ -326,7 +356,7 @@ backend/
 
 
 ```bash
-git clone https://github.com/Venumohan004/jobPortal.git
+git clone https://github.com/Venumohan004/JobPortal.git
 
 cd jobPortal
 ```
@@ -383,11 +413,7 @@ SECRET_KEY=your_secret_key
 JWT_SECRET_KEY=your_jwt_secret_key
 
 
-MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASSWORD=password
-MYSQL_DB=job_portal_day4
-
+DATABASE_URL=postgresql://username:password@host/database
 
 MAIL_SERVER=smtp.gmail.com
 MAIL_PORT=587
@@ -433,22 +459,39 @@ flask db upgrade
 
 # ▶️ Running Application
 
-
 Start Flask server:
-
 
 ```bash
 python app.py
 ```
 
-
 Server:
 
-
-```
+```text
 http://127.0.0.1:5000
 ```
 
+---
+
+# ☁️ Deployment
+
+The backend is deployed on Render.
+
+**Production URL**
+
+```text
+https://jobportal-aver.onrender.com
+```
+
+---
+
+## 🌐 Live API
+
+**Base URL**
+
+```text
+https://jobportal-aver.onrender.com
+```
 
 ---
 
@@ -456,12 +499,16 @@ http://127.0.0.1:5000
 
 
 | Module | Description |
-|---|---|
+|----------|------------------------------|
 | Authentication | Register, Login, Password Reset |
 | Candidate | Profile, Resume, Applications |
-| Recruiter | Jobs, Applications, Analytics |
-| Admin | Dashboard, Reports |
+| Recruiter | Company Profile, Jobs, Analytics |
 | Jobs | CRUD, Search, Filter, Pagination |
+| Applications | Apply Jobs, Status Management |
+| Resume | Upload, Download, Delete |
+| Interview | Schedule, View, Update, Delete |
+| Saved Jobs | Save & Remove Jobs |
+| Admin | Dashboard & Reports |
 
 
 ---
@@ -478,10 +525,15 @@ http://127.0.0.1:5000
 | POST | `/jobs` | Create Job |
 | PUT | `/jobs/<id>` | Update Job |
 | DELETE | `/jobs/<id>` | Delete Job |
-| POST | `/apply` | Apply Job |
+| POST | `/jobs/<job_id>/apply` | Apply for a Job |
 | GET | `/applications` | View Applications |
 | POST | `/upload/resume` | Upload Resume |
 | GET | `/admin/dashboard` | Admin Dashboard |
+| POST | `/interviews` | Schedule Interview |
+| GET | `/interviews` | Get All Interviews |
+| GET | `/interviews/<id>` | Get Interview Details |
+| PUT | `/interviews/<id>` | Update Interview |
+| DELETE | `/interviews/<id>` | Delete Interview |
 
 
 ---
@@ -490,7 +542,6 @@ http://127.0.0.1:5000
 
 
 Implemented security features:
-
 
 ✅ JWT Authentication  
 ✅ Password Hashing  
@@ -508,16 +559,17 @@ Implemented security features:
 
 API testing performed using:
 
-
-- Postman
-- JWT Testing
+- Postman API Testing
+- JWT Authentication Testing
 - CRUD Testing
-- Authentication Testing
-- Authorization Testing
+- Recruiter Workflow Testing
+- Candidate Workflow Testing
+- Interview Module Testing
+- Database Migration Testing
+- Render Deployment Testing
 
 
-Example Response:
-
+Example Login Response:
 
 ```json
 {
@@ -525,7 +577,6 @@ Example Response:
     "token": "JWT_TOKEN"
 }
 ```
-
 
 ---
 
@@ -535,6 +586,9 @@ Example Response:
 - AI Resume Screening
 - AI Candidate Ranking
 - Interview Scheduling
+- Interview Feedback System
+- Calendar Integration
+- Interview Reminder Emails
 - Docker Deployment
 - Swagger Documentation
 - Unit Testing
@@ -583,6 +637,6 @@ This project is licensed under the MIT License.
 
 <p align="center">
 
-Made with ❤️ using Python, Flask & MySQL
+Made with ❤️ using Python, Flask & PostgreSQL
 
 </p>
