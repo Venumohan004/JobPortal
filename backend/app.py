@@ -20,8 +20,7 @@ from routes.admin import admin_bp
 from routes.interview import interview_bp
 
 # Email
-from utils.email import mail   # <-- Make sure this matches your send_email() file
-from utils.email import send_email
+from utils.email import mail, send_email
 
 app = Flask(__name__)
 
@@ -30,6 +29,26 @@ app = Flask(__name__)
 # =====================
 
 app.config.from_object(Config)
+
+# =====================
+# Enable CORS (FIXED)
+# =====================
+
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": [
+                "http://localhost:5173"
+                # Add your deployed frontend URL later, e.g.
+                # "https://your-frontend.vercel.app"
+            ]
+        }
+    },
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+)
 
 # =====================
 # Create Upload Folders
@@ -47,12 +66,6 @@ db.init_app(app)
 jwt = JWTManager(app)
 mail.init_app(app)
 migrate = Migrate(app, db)
-
-CORS(
-    app,
-    resources={r"/*": {"origins": "*"}},
-    supports_credentials=True
-)
 
 # =====================
 # Register Blueprints
@@ -112,7 +125,6 @@ def dashboard():
 def profile_page():
     return render_template("profile.html")
 
-
 # =====================
 # Configuration Test
 # =====================
@@ -146,7 +158,6 @@ def server_error(error):
         "message": "Internal Server Error",
         "error": str(error)
     }, 500
-
 
 # =====================
 # Run Application
