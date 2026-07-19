@@ -8,7 +8,7 @@ import Stats from "../components/home/Stats";
 function Home() {
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <Hero />
       <SearchSection />
       <FeaturedJobs />
