@@ -1,14 +1,17 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
+from threading import Thread
+
 from models import db, User
 from models.application import Application
 from models.job import Job
+
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity,
     get_jwt
 )
+
 from utils.email import send_email
-from threading import Thread
 
 application_bp = Blueprint("application", __name__)
 
@@ -18,16 +21,18 @@ application_bp = Blueprint("application", __name__)
 # =====================================
 
 def send_application_email(
+    app,
     recruiter_email,
     candidate_name,
     candidate_email,
     job_title
 ):
-    try:
-        send_email(
-            subject="New Job Application",
-            recipients=[recruiter_email],
-            body=f"""
+    with app.app_context():
+        try:
+            send_email(
+                subject="New Job Application",
+                recipients=[recruiter_email],
+                body=f"""
 Hello Recruiter,
 
 A new candidate has applied for your job.
@@ -42,11 +47,11 @@ Please login to your Job Portal account to review the application.
 Thank you,
 Job Portal Team
 """
-        )
-        print("Application email sent successfully")
+            )
+            print("Application email sent successfully")
 
-    except Exception as e:
-        print("Email Error:", e)
+        except Exception as e:
+            print("Email Error:", e)
 
 
 # =====================================
@@ -105,9 +110,12 @@ def apply_job(job_id):
     candidate = User.query.get(candidate_id)
 
     if recruiter and candidate:
+        app = current_app._get_current_object()
+
         Thread(
             target=send_application_email,
             args=(
+                app,
                 recruiter.email,
                 candidate.full_name,
                 candidate.email,
