@@ -58,33 +58,36 @@ def apply_job(job_id):
         }), 500
 
     # Send email (optional)
-    try:
-        recruiter = User.query.get(job.created_by)
-        candidate = User.query.get(candidate_id)
+    # try:
+    #     recruiter = User.query.get(job.created_by)
+    #     candidate = User.query.get(candidate_id)
 
-        if recruiter and candidate:
-            send_email(
-                subject="New Job Application",
-                recipients=[recruiter.email],
-                body=f"""
-                Hello Recruiter,
+    #     if recruiter and candidate:
+    #         send_email(
+    #             subject="New Job Application",
+    #             recipients=[recruiter.email],
+    #             body=f"""
+    #             Hello Recruiter,
 
-                A new candidate has applied for your job.
+    #             A new candidate has applied for your job.
 
-                Candidate Name: {candidate.full_name}
-                Candidate Email: {candidate.email}
+    #             Candidate Name: {candidate.full_name}
+    #             Candidate Email: {candidate.email}
 
-                Job Title: {job.title}
+    #             Job Title: {job.title}
 
-                Please login to your Job Portal account to review the application.
+    #             Please login to your Job Portal account to review the application.
 
-                Thank you,
-                Job Portal Team
-            """
-            )
+    #             Thank you,
+    #             Job Portal Team
+    #         """
+    #         )
 
-    except Exception as e:
-        print("Email Error:", e)
+    # except Exception as e:
+    #     print("Email Error:", e)
+
+    # Email notification temporarily disabled
+    print("Application created successfully. Email notification skipped.")
 
     return jsonify({
         "message": "Job Applied Successfully",
