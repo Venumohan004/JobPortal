@@ -408,7 +408,6 @@ def remove_saved_job(job_id):
     }), 200
 
 @jobs_bp.route("/jobs/<int:id>", methods=["GET"])
-@jwt_required()
 def get_single_job(id):
 
     job = db.session.get(Job, id)
@@ -417,35 +416,6 @@ def get_single_job(id):
         return jsonify({
             "message": "Job not found"
         }), 404
-
-
-    claims = get_jwt()
-
-    # Only candidates should get recent viewed history
-    if claims["role"] == "candidate":
-
-        candidate_id = int(get_jwt_identity())
-
-        existing = RecentlyViewedJob.query.filter_by(
-            candidate_id=candidate_id,
-            job_id=id
-        ).first()
-
-
-        if not existing:
-
-            viewed_job = RecentlyViewedJob(
-                candidate_id=candidate_id,
-                job_id=id
-            )
-
-            try:
-                db.session.add(viewed_job)
-                db.session.commit()
-
-            except Exception:
-                db.session.rollback()
-
 
     return jsonify(job.to_dict()), 200
 
