@@ -10,6 +10,7 @@ from flask_jwt_extended import (
 
 from models import db
 from models.user import User
+from models.candidate import Candidate
 
 from utils.email import send_email
 from utils.token_helper import (
@@ -86,6 +87,13 @@ def register():
         )
 
         db.session.add(user)
+        db.session.flush()   # get user.id before commit
+
+        # Auto-create candidate profile
+        if user.role == "candidate":
+            candidate = Candidate(user_id=user.id)
+            db.session.add(candidate)
+
         db.session.commit()
 
         # send_email(
