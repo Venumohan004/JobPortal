@@ -1,75 +1,136 @@
 import { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import api from "../services/api";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
 
-  const handleLogin = async (e) => {
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Redirect back to the page user came from
+  const from = location.state?.from || "/jobs";
+
+  // ✅ Missing function
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage("");
 
     try {
-      const res = await axios.post(
-        "https://jobportal-aver.onrender.com/login",
-        {
-          email,
-          password,
-        }
-      );
+      const response = await api.post("/login", form);
 
-      // Check backend response
-      console.log("Login response:", res.data);
+      console.log("Login response:", response.data);
 
-      // Get token from either access_token or token
-      const token = res.data.access_token || res.data.token;
+      // Get token from backend response
+      const token =
+        response.data.access_token ||
+        response.data.token;
 
-      // Save token in localStorage
+      if (!token) {
+        setMessage("Token not received from server");
+        return;
+      }
+
+      // Save token
       localStorage.setItem("token", token);
 
-      alert("Login successful");
+      setMessage("Login successful!");
 
-      // Redirect to home page
-      navigate("/profile");
-    } catch (error) {
-      console.error(error);
+      // Redirect after login
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 1000);
 
-      const msg =
-        error.response?.data?.message || "Login failed";
+    } catch (err) {
+      console.error(err);
 
-      alert(msg);
+      setMessage(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Invalid email or password"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto" }}>
-      <h2>Login</h2>
+    <div className="container py-5" style={{ maxWidth: "450px" }}>
+      <div className="card shadow-sm border-0">
+        <div className="card-body p-4">
+          <h2 className="text-center mb-4">Welcome Back</h2>
 
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label className="form-label">Email</label>
 
-        <br /><br />
+              <input
+                type="email"
+                name="email"
+                className="form-control"
+                placeholder="Enter your email"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+            <div className="mb-3">
+              <label className="form-label">Password</label>
 
-        <br /><br />
+              <input
+                type="password"
+                name="password"
+                className="form-control"
+                placeholder="Enter your password"
+                value={form.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <button type="submit">Login</button>
-      </form>
+            <button
+              type="submit"
+              className="btn btn-primary w-100"
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
+
+          {message && (
+            <div
+              className={`alert mt-3 ${
+                message.includes("successful")
+                  ? "alert-success"
+                  : "alert-danger"
+              }`}
+            >
+              {message}
+            </div>
+          )}
+
+          <div className="text-center mt-3">
+            <span>Don’t have an account? </span>
+
+            <Link to="/register">Register here</Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
