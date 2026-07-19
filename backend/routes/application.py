@@ -1,12 +1,57 @@
 from flask import Blueprint, request, jsonify
-from models import db
+from models import db, User
 from models.application import Application
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from models.job import Job
-from models import User
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity,
+    get_jwt
+)
 from utils.email import send_email
+from threading import Thread
 
 application_bp = Blueprint("application", __name__)
+
+
+# =====================================
+# Background Email Function
+# =====================================
+
+def send_application_email(
+    recruiter_email,
+    candidate_name,
+    candidate_email,
+    job_title
+):
+    try:
+        send_email(
+            subject="New Job Application",
+            recipients=[recruiter_email],
+            body=f"""
+Hello Recruiter,
+
+A new candidate has applied for your job.
+
+Candidate Name: {candidate_name}
+Candidate Email: {candidate_email}
+
+Job Title: {job_title}
+
+Please login to your Job Portal account to review the application.
+
+Thank you,
+Job Portal Team
+"""
+        )
+        print("Application email sent successfully")
+
+    except Exception as e:
+        print("Email Error:", e)
+
+
+# =====================================
+# Apply for Job
+# =====================================
 
 @application_bp.route("/jobs/<int:job_id>/apply", methods=["POST"])
 @jwt_required()
@@ -46,8 +91,6 @@ def apply_job(job_id):
 
         db.session.add(application)
         db.session.commit()
-
-        # Refresh object after commit
         db.session.refresh(application)
 
     except Exception as e:
@@ -57,65 +100,58 @@ def apply_job(job_id):
             "error": str(e)
         }), 500
 
-    # Send email (optional)
-    # try:
-    #     recruiter = User.query.get(job.created_by)
-    #     candidate = User.query.get(candidate_id)
+    # Send email in background
+    recruiter = User.query.get(job.created_by)
+    candidate = User.query.get(candidate_id)
 
-    #     if recruiter and candidate:
-    #         send_email(
-    #             subject="New Job Application",
-    #             recipients=[recruiter.email],
-    #             body=f"""
-    #             Hello Recruiter,
-
-    #             A new candidate has applied for your job.
-
-    #             Candidate Name: {candidate.full_name}
-    #             Candidate Email: {candidate.email}
-
-    #             Job Title: {job.title}
-
-    #             Please login to your Job Portal account to review the application.
-
-    #             Thank you,
-    #             Job Portal Team
-    #         """
-    #         )
-
-    # except Exception as e:
-    #     print("Email Error:", e)
-
-    # Email notification temporarily disabled
-    print("Application created successfully. Email notification skipped.")
+    if recruiter and candidate:
+        Thread(
+            target=send_application_email,
+            args=(
+                recruiter.email,
+                candidate.full_name,
+                candidate.email,
+                job.title
+            )
+        ).start()
 
     return jsonify({
         "message": "Job Applied Successfully",
         "application": application.to_dict()
     }), 201
 
+
+# =====================================
+# Get All Applications (Recruiter/Admin)
+# =====================================
+
 @application_bp.route("/applications", methods=["GET"])
 @jwt_required()
 def get_applications():
 
     claims = get_jwt()
-    
 
     if claims["role"] not in ["recruiter", "admin"]:
         return jsonify({
-        "message": "Access denied"
-    }), 403
+            "message": "Access denied"
+        }), 403
 
     applications = Application.query.all()
 
     return jsonify({
         "count": len(applications),
-        "applications": [application.to_dict() for application in applications]
+        "applications": [a.to_dict() for a in applications]
     }), 200
+
+
+# =====================================
+# Delete Application
+# =====================================
 
 @application_bp.route("/applications/<int:id>", methods=["DELETE"])
 @jwt_required()
 def delete_application(id):
+
     claims = get_jwt()
     user_id = int(get_jwt_identity())
 
@@ -138,37 +174,48 @@ def delete_application(id):
         "message": "Application Deleted Successfully"
     }), 200
 
+
+# =====================================
+# Get Applications for a Recruiter's Job
+# =====================================
+
 @application_bp.route("/jobs/<int:job_id>/applications", methods=["GET"])
 @jwt_required()
 def get_job_applications(job_id):
-    
+
     claims = get_jwt()
 
     if claims["role"] != "recruiter":
         return jsonify({
             "message": "Only recruiters can view job applications"
         }), 403
+
     recruiter_id = int(get_jwt_identity())
 
     job = Job.query.get(job_id)
 
     if not job:
         return jsonify({
-        "message": "Job not found"
-    }), 404
+            "message": "Job not found"
+        }), 404
 
     if job.created_by != recruiter_id:
         return jsonify({
-        "message": "You can view applications only for your own jobs"
-    }), 403
+            "message": "You can view applications only for your own jobs"
+        }), 403
 
     applications = Application.query.filter_by(job_id=job_id).all()
 
     return jsonify({
         "job_id": job_id,
         "count": len(applications),
-        "applications": [application.to_dict() for application in applications]
+        "applications": [a.to_dict() for a in applications]
     }), 200
+
+
+# =====================================
+# Update Application Status
+# =====================================
 
 @application_bp.route("/applications/<int:id>/status", methods=["PUT"])
 @jwt_required()
@@ -218,6 +265,7 @@ def update_application_status(id):
 
     try:
         db.session.commit()
+
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -227,34 +275,30 @@ def update_application_status(id):
 
     candidate = User.query.get(application.candidate_id)
 
+    # Send status update email
     try:
         send_email(
             subject="Application Status Updated",
             recipients=[candidate.email],
             body=f"""
-            Hello {candidate.full_name},
+Hello {candidate.full_name},
 
-            Your application status has been updated.
+Your application status has been updated.
 
-            Job Title:
-            {job.title}
+Job Title: {job.title}
 
-            Current Status:
-            {application.status}
+Current Status: {application.status}
 
-            Please log in to your Job Portal account to view more details.
+Please log in to your Job Portal account to view more details.
 
-            Best Regards,
-            Job Portal Team
-            """
-                    )
-        print("Email sent successfully.")
+Best Regards,
+Job Portal Team
+"""
+        )
+        print("Status update email sent successfully")
 
     except Exception as e:
-        print("========== EMAIL ERROR ==========")
-        print(e)
-        print("=================================")
-        # Do NOT return an error here
+        print("Status Email Error:", e)
 
     return jsonify({
         "message": "Application status updated successfully",
