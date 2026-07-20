@@ -45,6 +45,13 @@ function Navbar() {
                 Jobs
               </Link>
             </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/saved-jobs">Saved Jobs</Link>
+            </li>
+            <br></br>
+            <li className="nav-item">
+              <Link className="nav-link" to="/upload-resume">Upload Resume</Link>
+            </li>
           </ul>
 
           {/* Right Menu */}

@@ -1,136 +1,82 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
-import api from "../services/api";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+const API = "https://jobportal-aver.onrender.com";
 
 function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Redirect back to the page user came from
-  const from = location.state?.from || "/jobs";
-
-  // ✅ Missing function
   const handleChange = (e) => {
-    setForm({
-      ...form,
+    setFormData({
+      ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
+    setError("");
 
     try {
-      const response = await api.post("/login", form);
+      const res = await axios.post(`${API}/login`, formData);
 
-      console.log("Login response:", response.data);
-
-      // Get token from backend response
-      const token =
-        response.data.access_token ||
-        response.data.token;
-
-      if (!token) {
-        setMessage("Token not received from server");
-        return;
-      }
+      console.log("Login response:", res.data);
 
       // Save token
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", res.data.token);
 
-      setMessage("Login successful!");
+      // Save role if backend sends it
+      localStorage.setItem("role", res.data.role || "candidate");
 
-      // Redirect after login
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 1000);
+      alert("Login successful!");
+
+      // Redirect based on role
+      if (res.data.role === "recruiter") {
+        navigate("/recruiter/dashboard");
+      } else {
+        navigate("/");
+      }
 
     } catch (err) {
       console.error(err);
-
-      setMessage(
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Invalid email or password"
-      );
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
   return (
-    <div className="container py-5" style={{ maxWidth: "450px" }}>
-      <div className="card shadow-sm border-0">
-        <div className="card-body p-4">
-          <h2 className="text-center mb-4">Welcome Back</h2>
+    <div className="login-container">
+      <h2>Login</h2>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label className="form-label">Email</label>
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-              <input
-                type="email"
-                name="email"
-                className="form-control"
-                placeholder="Enter your email"
-                value={form.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
 
-            <div className="mb-3">
-              <label className="form-label">Password</label>
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+        />
 
-              <input
-                type="password"
-                name="password"
-                className="form-control"
-                placeholder="Enter your password"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary w-100"
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
-
-          {message && (
-            <div
-              className={`alert mt-3 ${
-                message.includes("successful")
-                  ? "alert-success"
-                  : "alert-danger"
-              }`}
-            >
-              {message}
-            </div>
-          )}
-
-          <div className="text-center mt-3">
-            <span>Don’t have an account? </span>
-
-            <Link to="/register">Register here</Link>
-          </div>
-        </div>
-      </div>
+        <button type="submit">Login</button>
+      </form>
     </div>
   );
 }
