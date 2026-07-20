@@ -63,7 +63,7 @@ def register():
 
         if not all([full_name, email, password, role]):
             return jsonify({
-                "message": "Required fields are missing"
+                "message": "full_name, email, password and role are required"
             }), 400
 
         existing = User.query.filter_by(email=email).first()
