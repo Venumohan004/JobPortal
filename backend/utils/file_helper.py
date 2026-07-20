@@ -1,7 +1,7 @@
 import os
 
 IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
-RESUME_EXTENSIONS = {"pdf"}
+RESUME_EXTENSIONS = {"pdf", "doc", "docx"}
 
 def allowed_file(filename, allowed_extensions):
     return (

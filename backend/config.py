@@ -74,7 +74,7 @@ class Config:
     # Frontend URL
     FRONTEND_URL = os.getenv(
             "FRONTEND_URL",
-            "https://jobportal-aver.onrender.com"
+            "http://localhost:5173"
     )
 
     # =========================

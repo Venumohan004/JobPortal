@@ -20,17 +20,27 @@ resume_bp = Blueprint("resume", __name__)
 @jwt_required()
 def upload_resume():
     try:
+        # Debug: print uploaded files in terminal
+        print("FILES RECEIVED:", request.files)
+
         if "resume" not in request.files:
-            return jsonify({"message": "No file uploaded"}), 400
+            return jsonify({
+                "message": "No file uploaded. Use form-data with key 'resume'."
+            }), 400
 
         file = request.files["resume"]
 
-        if file.filename == "":
-            return jsonify({"message": "No selected file"}), 400
+        print("UPLOADED FILE:", file.filename)
 
+        if file.filename == "":
+            return jsonify({
+                "message": "No selected file"
+            }), 400
+
+        # Allow PDF, DOC, DOCX
         if not allowed_file(file.filename, RESUME_EXTENSIONS):
             return jsonify({
-                "message": "Only PDF files are allowed"
+                "message": "Only PDF, DOC and DOCX files are allowed"
             }), 400
 
         filename = secure_filename(file.filename)
@@ -48,9 +58,11 @@ def upload_resume():
         ).first()
 
         if existing_resume:
-
-            # Delete old file
-            if os.path.exists(existing_resume.file_path):
+            # Delete old file first
+            if (
+                existing_resume.file_path
+                and os.path.exists(existing_resume.file_path)
+            ):
                 os.remove(existing_resume.file_path)
 
             # Save new file
@@ -69,6 +81,7 @@ def upload_resume():
         # Save new file
         file.save(filepath)
 
+        # Create new resume record
         new_resume = Resume(
             candidate_id=candidate_id,
             file_name=filename,
