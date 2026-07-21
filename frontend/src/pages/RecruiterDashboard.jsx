@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import "../styles/dashboard.css";
+import { Link } from "react-router-dom";
 
 function RecruiterDashboard() {
   const [profile, setProfile] = useState(null);
@@ -69,7 +70,9 @@ function RecruiterDashboard() {
   return (
     <div className="dashboard-container">
       <h1>Recruiter Dashboard</h1>
-
+          <Link to="/create-job" className="btn btn-primary">
+            + Post New Job
+          </Link>
       {error && (
         <div className="alert alert-warning">
           {error}
