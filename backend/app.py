@@ -40,7 +40,7 @@ CORS(
         r"/*": {
             "origins": [
                 "http://localhost:5173",
-                "http://localhost:5174"
+                "https://jobportal-frontend-uojm.onrender.com"
                 # Add your deployed frontend URL later, e.g.
                 # "https://your-frontend.vercel.app"
             ]
