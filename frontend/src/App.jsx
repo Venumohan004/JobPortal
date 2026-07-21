@@ -10,6 +10,7 @@ import RecruiterDashboard from "./pages/RecruiterDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import SavedJobs from "./pages/SavedJobs";
 import ResumeUpload from "./pages/ResumeUpload";
+import CreateJob from "./pages/CreateJob"; // Create this file if not available
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Navbar from "./components/common/Navbar";
@@ -20,24 +21,87 @@ function App() {
       <Navbar />
 
       <Routes>
-        {/* Public Routes */}
+        {/* =========================
+            Public Routes
+        ========================== */}
         <Route path="/" element={<Home />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/saved-jobs" element={<SavedJobs />} />
-        <Route path="/upload-resume" element={<ResumeUpload />} />
-        
-        {/* Protected Route */}
+
+        {/* =========================
+            Candidate Protected Routes
+        ========================== */}
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["candidate"]}>
               <Profile />
             </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/saved-jobs"
+          element={
+            <ProtectedRoute allowedRoles={["candidate"]}>
+              <SavedJobs />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/upload-resume"
+          element={
+            <ProtectedRoute allowedRoles={["candidate"]}>
+              <ResumeUpload />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =========================
+            Recruiter Protected Routes
+        ========================== */}
+        <Route
+          path="/recruiter/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["recruiter"]}>
+              <RecruiterDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/create-job"
+          element={
+            <ProtectedRoute allowedRoles={["recruiter"]}>
+              <CreateJob />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =========================
+            Admin Protected Routes
+        ========================== */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =========================
+            Fallback Route
+        ========================== */}
+        <Route
+          path="*"
+          element={
+            <div className="container py-5 text-center">
+              <h2>404 - Page Not Found</h2>
+            </div>
           }
         />
       </Routes>
