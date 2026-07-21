@@ -20,26 +20,34 @@ function Login() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setError("");
 
     try {
       const res = await axios.post(`${API}/login`, formData);
 
       console.log("Login response:", res.data);
 
-      // Save token
-      localStorage.setItem("token", res.data.token);
+      // Save JWT token
+      localStorage.setItem(
+        "token",
+        res.data.access_token || res.data.token
+      );
 
-      // Save role if backend sends it
-      localStorage.setItem("role", res.data.role || "candidate");
+      // Save role
+      localStorage.setItem(
+        "role",
+        res.data.role || "candidate"
+      );
 
       alert("Login successful!");
 
       // Redirect based on role
       if (res.data.role === "recruiter") {
         navigate("/recruiter/dashboard");
+      } else if (res.data.role === "admin") {
+        navigate("/admin/dashboard");
       } else {
         navigate("/");
       }

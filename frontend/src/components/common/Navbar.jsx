@@ -2,10 +2,13 @@ import { Link, useNavigate } from "react-router-dom";
 
 function Navbar() {
   const navigate = useNavigate();
+
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("role");
     navigate("/login");
   };
 
@@ -45,13 +48,41 @@ function Navbar() {
                 Jobs
               </Link>
             </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/saved-jobs">Saved Jobs</Link>
-            </li>
-            <br></br>
-            <li className="nav-item">
-              <Link className="nav-link" to="/upload-resume">Upload Resume</Link>
-            </li>
+
+            {/* Candidate Links */}
+            {token && role === "candidate" && (
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/saved-jobs">
+                    Saved Jobs
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link className="nav-link" to="/upload-resume">
+                    Upload Resume
+                  </Link>
+                </li>
+              </>
+            )}
+
+            {/* Recruiter Dashboard */}
+            {token && role === "recruiter" && (
+              <li className="nav-item">
+                <Link className="nav-link" to="/recruiter/dashboard">
+                  Dashboard
+                </Link>
+              </li>
+            )}
+
+            {/* Admin Dashboard */}
+            {token && role === "admin" && (
+              <li className="nav-item">
+                <Link className="nav-link" to="/admin/dashboard">
+                  Admin
+                </Link>
+              </li>
+            )}
           </ul>
 
           {/* Right Menu */}
@@ -62,10 +93,7 @@ function Navbar() {
                   Profile
                 </Link>
 
-                <button
-                  className="btn btn-danger"
-                  onClick={handleLogout}
-                >
+                <button className="btn btn-danger" onClick={handleLogout}>
                   Logout
                 </button>
               </>
