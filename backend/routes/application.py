@@ -130,9 +130,50 @@ def apply_job(job_id):
 
 
 # =====================================
-# Get Applications
-# Candidate -> own applications
-# Recruiter/Admin -> all applications
+# Candidate - My Applications
+# =====================================
+
+@application_bp.route("/my-applications", methods=["GET"])
+@jwt_required()
+def my_applications():
+
+    claims = get_jwt()
+
+    if claims["role"] != "candidate":
+        return jsonify({
+            "message": "Only candidates can view their applications"
+        }), 403
+
+    candidate_id = int(get_jwt_identity())
+
+    applications = Application.query.filter_by(
+        candidate_id=candidate_id
+    ).all()
+
+    result = []
+
+    for app in applications:
+        job = db.session.get(Job, app.job_id)
+
+        if job:
+            result.append({
+                "id": app.id,
+                "job_id": job.id,
+                "job_title": job.title,
+                "company": job.company,
+                "location": job.location,
+                "status": getattr(app, "status", "Applied"),
+                "created_at": app.created_at.isoformat() if getattr(app, "created_at", None) else None
+            })
+
+    return jsonify({
+        "count": len(result),
+        "applications": result
+    }), 200
+
+
+# =====================================
+# Get Applications (Recruiter/Admin)
 # =====================================
 
 @application_bp.route("/applications", methods=["GET"])
@@ -140,45 +181,18 @@ def apply_job(job_id):
 def get_applications():
 
     claims = get_jwt()
-    user_id = int(get_jwt_identity())
 
-    # Candidate: only own applications
-    if claims["role"] == "candidate":
-
-        applications = Application.query.filter_by(
-            candidate_id=user_id
-        ).all()
-
-        result = []
-
-        for app in applications:
-            job = db.session.get(Job, app.job_id)
-
-            if job:
-                result.append({
-                    "id": app.id,
-                    "job_id": job.id,
-                    "job_title": job.title,
-                    "company": job.company,
-                    "location": job.location,
-                    "status": app.status if hasattr(app, "status") else "Applied"
-                })
-
-        return jsonify(result), 200
-
-    # Recruiter/Admin: all applications
-    elif claims["role"] in ["recruiter", "admin"]:
-
-        applications = Application.query.all()
-
+    if claims["role"] not in ["recruiter", "admin"]:
         return jsonify({
-            "count": len(applications),
-            "applications": [a.to_dict() for a in applications]
-        }), 200
+            "message": "Access denied"
+        }), 403
+
+    applications = Application.query.all()
 
     return jsonify({
-        "message": "Access denied"
-    }), 403
+        "count": len(applications),
+        "applications": [a.to_dict() for a in applications]
+    }), 200
 
 
 # =====================================
@@ -243,11 +257,17 @@ def get_job_applications(job_id):
 
     applications = Application.query.filter_by(job_id=job_id).all()
 
-    return jsonify({
-        "job_id": job_id,
-        "count": len(applications),
-        "applications": [a.to_dict() for a in applications]
-    }), 200
+    result = []
+
+    for app in applications:
+        result.append({
+            "id": app.id,
+            "candidate_id": app.candidate_id,
+            "status": getattr(app, "status", "Applied"),
+            "created_at": app.created_at.isoformat() if getattr(app, "created_at", None) else None
+        })
+
+    return jsonify(result), 200
 
 
 # =====================================
