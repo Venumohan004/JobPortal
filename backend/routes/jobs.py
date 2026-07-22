@@ -525,7 +525,8 @@ def get_job_applicants(job_id):
             applicants.append({
                 "id": application.id,
                 "candidate_id": application.candidate_id,
-                "applied_at": "Recently applied"
+                "applied_at": application.created_at.isoformat()
+                    if hasattr(application, "created_at") else None
             })
 
         return jsonify(applicants), 200
