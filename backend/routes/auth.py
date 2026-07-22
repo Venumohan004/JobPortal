@@ -175,9 +175,7 @@ def login():
 @jwt_required()
 def profile():
 
-    user_id = get_jwt_identity()
-
-    user = db.session.get(User, int(user_id))
+    user = db.session.get(User, int(get_jwt_identity()))
 
     if not user:
         return jsonify({
@@ -185,14 +183,15 @@ def profile():
         }), 404
 
     return jsonify({
-        "message": "Protected Route Accessed Successfully",
-        "user": {
-            "id": user.id,
-            "full_name": user.full_name,
-            "email": user.email,
-            "phone": user.phone,
-            "role": user.role
-        }
+        "id": user.id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "phone": user.phone,
+        "location": user.location,
+        "skills": user.skills,
+        "bio": user.bio,
+        "profile_image": user.profile_image,
+        "role": user.role
     }), 200
 
 @auth.route("/forgot-password", methods=["POST"])

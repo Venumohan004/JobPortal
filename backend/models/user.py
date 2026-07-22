@@ -79,6 +79,16 @@ class User(db.Model):
         default=datetime.utcnow,
         nullable=False
     )
+    # Stores profile resume path (optional)
+    resume = db.Column(db.String(255))
+
+    profile_image = db.Column(db.String(255))
+
+    location = db.Column(db.String(100))
+
+    skills = db.Column(db.Text)   # 👈 ADD THIS LINE
+
+    bio = db.Column(db.Text)
 
     def to_dict(self):
         return {
@@ -88,6 +98,7 @@ class User(db.Model):
             "phone": self.phone,
             "role": self.role,
             "location": self.location,
+            "skills": self.skills,   # 👈 ADD THIS
             "bio": self.bio,
             "resume": self.resume,
             "profile_image": self.profile_image,

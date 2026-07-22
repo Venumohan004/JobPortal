@@ -104,8 +104,39 @@ def upload_resume():
             "message": "Internal Server Error",
             "error": str(e)
         }), 500
+# ==========================================================
+# Get Logged-in Candidate Resume
+# ==========================================================
+@resume_bp.route("/resume", methods=["GET"])
+@jwt_required()
+def get_my_resume():
+
+    candidate_id = int(get_jwt_identity())
+
+    resume = Resume.query.filter_by(
+        candidate_id=candidate_id
+    ).first()
+
+    if not resume:
+        return jsonify({
+            "message": "No resume uploaded"
+        }), 404
+
+    return jsonify({
+        "id": resume.id,
+        "filename": resume.file_name,
+        "resume_url": f"/resume/download/{candidate_id}",
+        "uploaded_at": resume.created_at.isoformat() if hasattr(resume, "created_at") and resume.created_at else None
+    }), 200
 
 
+# ==========================================================
+# Frontend Upload Route Alias
+# ==========================================================
+@resume_bp.route("/resume/upload", methods=["POST"])
+@jwt_required()
+def upload_resume_alias():
+    return upload_resume()
 # ==========================================================
 # Get Resume
 # ==========================================================

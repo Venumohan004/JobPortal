@@ -18,6 +18,7 @@ from routes.resume import resume_bp
 from routes.saved_jobs import saved_bp
 from routes.admin import admin_bp
 from routes.interview import interview_bp
+from routes.profile import profile_bp
 
 # Email
 from utils.email import mail, send_email
@@ -72,6 +73,7 @@ app.register_blueprint(resume_bp)
 app.register_blueprint(saved_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(interview_bp, url_prefix="/interviews")
+app.register_blueprint(profile_bp)
 
 # =====================
 # Basic Routes
