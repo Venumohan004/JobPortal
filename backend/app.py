@@ -36,19 +36,10 @@ app.config.from_object(Config)
 
 CORS(
     app,
-    resources={
-        r"/*": {
-            "origins": [
-                "http://localhost:5173",
-                "https://jobportal-frontend-uojm.onrender.com"
-                # Add your deployed frontend URL later, e.g.
-                # "https://your-frontend.vercel.app"
-            ]
-        }
-    },
+    resources={r"/*": {"origins": "*"}},
     supports_credentials=True,
     allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 )
 
 # =====================

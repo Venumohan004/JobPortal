@@ -474,3 +474,69 @@ def update_job(id):
         "job":job.to_dict()
     }),200
 
+@jobs_bp.route("/jobs/<int:job_id>/applicants", methods=["GET", "OPTIONS"])
+@jwt_required(optional=True)
+def get_job_applicants(job_id):
+
+    # Handle CORS preflight request
+    if request.method == "OPTIONS":
+        response = jsonify({"message": "OK"})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add(
+            "Access-Control-Allow-Headers",
+            "Content-Type,Authorization"
+        )
+        response.headers.add(
+            "Access-Control-Allow-Methods",
+            "GET,OPTIONS"
+        )
+        return response, 200
+
+    claims = get_jwt()
+
+    # Only recruiters can view applicants
+    if claims.get("role") != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can view applicants"
+        }), 403
+
+    recruiter_id = int(get_jwt_identity())
+
+    # Check job exists
+    job = db.session.get(Job, job_id)
+
+    if not job:
+        return jsonify({
+            "message": "Job not found"
+        }), 404
+
+    # Ensure recruiter owns the job
+    if job.created_by != recruiter_id:
+        return jsonify({
+            "message": "You can view applicants only for your own jobs"
+        }), 403
+
+    # Fetch applications
+    applications = Application.query.filter_by(job_id=job_id).all()
+
+    applicants = []
+
+    for app in applications:
+        user = app.candidate.user if app.candidate else None
+
+        applicants.append({
+            "id": app.id,
+            "name": user.username if user else "Unknown",
+            "email": user.email if user else "Unknown",
+            "resume_url": (
+                app.candidate.resume.file_url
+                if app.candidate and app.candidate.resume
+                else None
+            ),
+            "applied_at": (
+                app.applied_at.isoformat()
+                if app.applied_at else None
+            )
+        })
+
+    return jsonify(applicants), 200
