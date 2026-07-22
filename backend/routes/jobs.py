@@ -492,39 +492,49 @@ def get_job_applicants(job_id):
         )
         return response, 200
 
-    claims = get_jwt()
+    try:
+        claims = get_jwt()
 
-    if claims.get("role") != "recruiter":
+        if claims.get("role") != "recruiter":
+            return jsonify({
+                "message": "Only recruiters can view applicants"
+            }), 403
+
+        recruiter_id = int(get_jwt_identity())
+
+        # Check job exists
+        job = db.session.get(Job, job_id)
+
+        if not job:
+            return jsonify({
+                "message": "Job not found"
+            }), 404
+
+        # Ensure recruiter owns the job
+        if job.created_by != recruiter_id:
+            return jsonify({
+                "message": "You can view applicants only for your own jobs"
+            }), 403
+
+        # Fetch applications
+        applications = Application.query.filter_by(job_id=job_id).all()
+
+        applicants = []
+
+        for application in applications:
+            applicants.append({
+                "id": application.id,
+                "candidate_id": application.candidate_id,
+                "applied_at": (
+                    application.applied_at.isoformat()
+                    if application.applied_at else None
+                )
+            })
+
+        return jsonify(applicants), 200
+
+    except Exception as e:
         return jsonify({
-            "message": "Only recruiters can view applicants"
-        }), 403
-
-    recruiter_id = int(get_jwt_identity())
-
-    job = db.session.get(Job, job_id)
-
-    if not job:
-        return jsonify({
-            "message": "Job not found"
-        }), 404
-
-    if job.created_by != recruiter_id:
-        return jsonify({
-            "message": "You can view applicants only for your own jobs"
-        }), 403
-
-    applications = Application.query.filter_by(job_id=job_id).all()
-
-    applicants = []
-
-    for application in applications:
-        applicants.append({
-            "id": application.id,
-            "candidate_id": application.candidate_id,
-            "applied_at": (
-                application.applied_at.isoformat()
-                if application.applied_at else None
-            )
-        })
-
-    return jsonify(applicants), 200
+            "message": "Failed to fetch applicants",
+            "error": str(e)
+        }), 500
