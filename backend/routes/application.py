@@ -71,7 +71,7 @@ def apply_job(job_id):
 
     candidate_id = int(get_jwt_identity())
 
-    job = Job.query.get(job_id)
+    job = db.session.get(Job, job_id)
 
     if not job:
         return jsonify({
@@ -106,8 +106,8 @@ def apply_job(job_id):
         }), 500
 
     # Send email in background
-    recruiter = User.query.get(job.created_by)
-    candidate = User.query.get(candidate_id)
+    recruiter = db.session.get(User, job.created_by)
+    candidate = db.session.get(User, candidate_id)
 
     if recruiter and candidate:
         app = current_app._get_current_object()
@@ -130,7 +130,9 @@ def apply_job(job_id):
 
 
 # =====================================
-# Get All Applications (Recruiter/Admin)
+# Get Applications
+# Candidate -> own applications
+# Recruiter/Admin -> all applications
 # =====================================
 
 @application_bp.route("/applications", methods=["GET"])
@@ -138,18 +140,45 @@ def apply_job(job_id):
 def get_applications():
 
     claims = get_jwt()
+    user_id = int(get_jwt_identity())
 
-    if claims["role"] not in ["recruiter", "admin"]:
+    # Candidate: only own applications
+    if claims["role"] == "candidate":
+
+        applications = Application.query.filter_by(
+            candidate_id=user_id
+        ).all()
+
+        result = []
+
+        for app in applications:
+            job = db.session.get(Job, app.job_id)
+
+            if job:
+                result.append({
+                    "id": app.id,
+                    "job_id": job.id,
+                    "job_title": job.title,
+                    "company": job.company,
+                    "location": job.location,
+                    "status": app.status if hasattr(app, "status") else "Applied"
+                })
+
+        return jsonify(result), 200
+
+    # Recruiter/Admin: all applications
+    elif claims["role"] in ["recruiter", "admin"]:
+
+        applications = Application.query.all()
+
         return jsonify({
-            "message": "Access denied"
-        }), 403
-
-    applications = Application.query.all()
+            "count": len(applications),
+            "applications": [a.to_dict() for a in applications]
+        }), 200
 
     return jsonify({
-        "count": len(applications),
-        "applications": [a.to_dict() for a in applications]
-    }), 200
+        "message": "Access denied"
+    }), 403
 
 
 # =====================================
@@ -163,7 +192,7 @@ def delete_application(id):
     claims = get_jwt()
     user_id = int(get_jwt_identity())
 
-    application = Application.query.get(id)
+    application = db.session.get(Application, id)
 
     if not application:
         return jsonify({
@@ -200,7 +229,7 @@ def get_job_applications(job_id):
 
     recruiter_id = int(get_jwt_identity())
 
-    job = Job.query.get(job_id)
+    job = db.session.get(Job, job_id)
 
     if not job:
         return jsonify({
@@ -236,14 +265,14 @@ def update_application_status(id):
             "message": "Only recruiters can update application status"
         }), 403
 
-    application = Application.query.get(id)
+    application = db.session.get(Application, id)
 
     if not application:
         return jsonify({
             "message": "Application not found"
         }), 404
 
-    job = Job.query.get(application.job_id)
+    job = db.session.get(Job, application.job_id)
 
     if job.created_by != int(get_jwt_identity()):
         return jsonify({
@@ -281,7 +310,7 @@ def update_application_status(id):
             "error": str(e)
         }), 500
 
-    candidate = User.query.get(application.candidate_id)
+    candidate = db.session.get(User, application.candidate_id)
 
     # Send status update email
     try:
