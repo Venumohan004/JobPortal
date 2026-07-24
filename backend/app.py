@@ -163,6 +163,7 @@ if __name__ == "__main__":
         debug=False
     )
 
+#checking 
 @app.route("/check-enum")
 def check_enum():
     from models.application import Application

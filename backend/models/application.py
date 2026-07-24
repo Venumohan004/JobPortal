@@ -20,9 +20,9 @@ class Application(db.Model):
         db.Enum(
             "Applied",
             "Shortlisted",
-            "Interview Scheduled",
             "Rejected",
             "Selected",
+            "Interview Scheduled",
             name="application_status"
         ),
         default="Applied",
