@@ -83,7 +83,7 @@ function CreateJob() {
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate("/recruiter/dashboard");
+        navigate("/recruiter-dashboard");
       }, 2000);
 
     } catch (err) {

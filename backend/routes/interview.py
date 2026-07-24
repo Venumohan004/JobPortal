@@ -2,11 +2,11 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import db, Interview, Application
+from models import db, Interview, Application, Candidate, Job, User
 from utils.recruiter_required import recruiter_required
+from utils.email_utils import send_interview_email
 
 interview_bp = Blueprint("interview", __name__)
-
 
 # =====================================
 # Schedule Interview
@@ -26,30 +26,79 @@ def schedule_interview():
         interview_time = data.get("interview_time")
         mode = data.get("mode")
         meeting_link = data.get("meeting_link")
+        location = data.get("location")
 
         if not all([application_id, interview_date, interview_time, mode]):
             return jsonify({
                 "message": "application_id, interview_date, interview_time and mode are required."
             }), 400
 
+        # Get application
         application = db.session.get(Application, application_id)
 
         if application is None:
             return jsonify({"message": "Application not found"}), 404
 
+        # Create interview
         interview = Interview(
             application_id=application_id,
             interview_date=interview_date,
             interview_time=interview_time,
             mode=mode,
-            meeting_link=meeting_link
+            meeting_link=meeting_link,
+            location=location
         )
 
         db.session.add(interview)
+
+        # Update application status
+        application.status = "Interview Scheduled"
+
+        # Save to database first
         db.session.commit()
+
+        # =====================================
+        # Prepare email data
+        # =====================================
+
+        candidate = Candidate.query.filter_by(
+            user_id=application.candidate_id
+        ).first()
+
+        if candidate is None:
+            return jsonify({"message": "Candidate not found"}), 404
+
+        user = db.session.get(User, candidate.user_id)
+
+        if user is None:
+            return jsonify({"message": "Candidate user account not found"}), 404
+
+        job = db.session.get(Job, application.job_id)
+
+        if job is None:
+            return jsonify({"message": "Job not found"}), 404
+
+        # Create interview_data dictionary
+        interview_data = {
+            "job_title": job.title,
+            "company_name": job.company,   # <-- change this
+            "interview_date": interview.interview_date,
+            "interview_time": interview.interview_time,
+            "mode": interview.mode,
+            "meeting_link": interview.meeting_link,
+            "location": interview.location
+        }
+
+        # Send email (do not fail API if email fails)
+        email_sent = send_interview_email(
+            candidate_email=user.email,
+            candidate_name=user.full_name,   # use user.username if your model uses username
+            interview_data=interview_data
+        )
 
         return jsonify({
             "message": "Interview scheduled successfully",
+            "email_sent": email_sent,
             "interview": interview.to_dict()
         }), 201
 
@@ -60,8 +109,7 @@ def schedule_interview():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": str(e)}), 500
-
-
+            
 # =====================================
 # Get All Interviews
 # =====================================

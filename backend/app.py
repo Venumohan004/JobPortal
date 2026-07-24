@@ -1,12 +1,12 @@
 import os
-
+from flasgger import Swagger
 from flask import Flask, render_template
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask_migrate import Migrate
 
 from config import Config
 from models import db
+from extensions import mail, migrate
 
 # Routes
 from routes.auth import auth
@@ -19,12 +19,11 @@ from routes.saved_jobs import saved_bp
 from routes.admin import admin_bp
 from routes.interview import interview_bp
 from routes.profile import profile_bp
-
-# Email
-from utils.email import mail, send_email
+from routes.candidate_interview_routes import candidate_interview_bp
 
 app = Flask(__name__)
 
+Swagger(app)
 # =====================
 # Load Configuration
 # =====================
@@ -32,7 +31,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # =====================
-# Enable CORS (FIXED)
+# Enable CORS
 # =====================
 
 CORS(
@@ -58,7 +57,7 @@ os.makedirs(app.config["PROFILE_FOLDER"], exist_ok=True)
 db.init_app(app)
 jwt = JWTManager(app)
 mail.init_app(app)
-migrate = Migrate(app, db)
+migrate.init_app(app, db)
 
 # =====================
 # Register Blueprints
@@ -74,6 +73,7 @@ app.register_blueprint(saved_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(interview_bp, url_prefix="/interviews")
 app.register_blueprint(profile_bp)
+app.register_blueprint(candidate_interview_bp)
 
 # =====================
 # Basic Routes
@@ -147,7 +147,6 @@ def not_found(_):
 @app.errorhandler(500)
 def server_error(error):
     db.session.rollback()
-
     return {
         "message": "Internal Server Error",
         "error": str(error)

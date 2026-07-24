@@ -37,6 +37,7 @@ function Navbar() {
         <div className="collapse navbar-collapse" id="navbarContent">
           {/* Left Menu */}
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+            {/* Public Links */}
             <li className="nav-item">
               <Link className="nav-link" to="/">
                 Home
@@ -49,12 +50,24 @@ function Navbar() {
               </Link>
             </li>
 
-            {/* Candidate Links */}
+            {/* Candidate Menu */}
             {token && role === "candidate" && (
               <>
                 <li className="nav-item">
+                  <Link className="nav-link" to="/candidate-dashboard">
+                    Dashboard
+                  </Link>
+                </li>
+
+                <li className="nav-item">
                   <Link className="nav-link" to="/saved-jobs">
                     Saved Jobs
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link className="nav-link" to="/applied-jobs">
+                    Applied Jobs
                   </Link>
                 </li>
 
@@ -66,19 +79,27 @@ function Navbar() {
               </>
             )}
 
-            {/* Recruiter Dashboard */}
+            {/* Recruiter Menu */}
             {token && role === "recruiter" && (
-              <li className="nav-item">
-                <Link className="nav-link" to="/recruiter/dashboard">
-                  Dashboard
-                </Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/recruiter-dashboard">
+                    Dashboard
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link className="nav-link" to="/create-job">
+                    Post Job
+                  </Link>
+                </li>
+              </>
             )}
 
-            {/* Admin Dashboard */}
+            {/* Admin Menu */}
             {token && role === "admin" && (
               <li className="nav-item">
-                <Link className="nav-link" to="/admin/dashboard">
+                <Link className="nav-link" to="/admin-dashboard">
                   Admin
                 </Link>
               </li>

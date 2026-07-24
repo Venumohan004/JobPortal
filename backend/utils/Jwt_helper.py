@@ -1,23 +1,46 @@
 from flask_jwt_extended import get_jwt_identity
+
 from models.user import User
 
-def get_current_user():
-    user_id = get_jwt_identity()
-    return User.query.get(user_id)
 
-def admin_required():
+def get_current_user():
+    """
+    Return the currently authenticated user object.
+    """
+
+    user_id = get_jwt_identity()
+
+    if not user_id:
+        return None
+
+    return User.query.get(int(user_id))
+
+
+def is_admin():
+    """
+    Check if the current user is an admin.
+    """
+
     user = get_current_user()
 
-    if not user or user.role != "admin":
-        return False
+    return bool(user and user.role == "admin")
 
-    return True
 
-ALLOWED_RESUME_EXTENSIONS = {"pdf"}
-ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
+def is_recruiter():
+    """
+    Check if the current user is a recruiter.
+    """
 
-def allowed_file(filename, allowed_extensions):
-    return (
-        "." in filename and
-        filename.rsplit(".", 1)[1].lower() in allowed_extensions
-    )
+    user = get_current_user()
+
+    return bool(user and user.role == "recruiter")
+
+
+def is_candidate():
+    """
+    Check if the current user is a candidate.
+    """
+
+    user = get_current_user()
+
+    return bool(user and user.role == "candidate")

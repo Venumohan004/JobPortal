@@ -20,36 +20,57 @@ function Login() {
     });
   };
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      setError("");
+  // Decode JWT token
+  const decodeToken = (token) => {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload;
+    } catch (err) {
+      console.error("Token decode error:", err);
+      return null;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
     try {
-      const res = await axios.post(`${API}/login`, formData);
+      // 1. Login request
+      const loginRes = await axios.post(`${API}/login`, formData);
 
-      console.log("Login response:", res.data);
+      const token = loginRes.data.token;
 
-      // Save JWT token
-      localStorage.setItem(
-        "token",
-        res.data.access_token || res.data.token
-      );
+      // 2. Decode token to get role
+      const decoded = decodeToken(token);
+      const role = decoded?.role;
 
-      // Save role
-      localStorage.setItem(
-        "role",
-        res.data.role || "candidate"
-      );
+      // 3. Get profile data using token
+      const profileRes = await axios.get(`${API}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const user = profileRes.data;
+
+      // 4. Save data in localStorage
+      localStorage.clear();
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("user_id", user.id);
+      localStorage.setItem("full_name", user.full_name);
 
       alert("Login successful!");
 
-      // Redirect based on role
-      if (res.data.role === "recruiter") {
-        navigate("/recruiter/dashboard");
-      } else if (res.data.role === "admin") {
-        navigate("/admin/dashboard");
+      // 5. Redirect based on role
+      if (role === "recruiter") {
+        navigate("/recruiter-dashboard");
+      } else if (role === "admin") {
+        navigate("/admin-dashboard");
       } else {
-        navigate("/");
+        navigate("/candidate-dashboard");
       }
 
     } catch (err) {
@@ -59,32 +80,46 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <h2>Login</h2>
+    <div className="container py-5" style={{ maxWidth: "450px" }}>
+      <div className="card shadow p-4">
+        <h2 className="text-center mb-4">Login</h2>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && (
+          <div className="alert alert-danger">{error}</div>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              name="email"
+              className="form-control"
+              placeholder="Enter email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
+          <div className="mb-4">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              className="form-control"
+              placeholder="Enter password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-        <button type="submit">Login</button>
-      </form>
+          <button type="submit" className="btn btn-primary w-100">
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

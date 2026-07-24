@@ -1,36 +1,34 @@
 function Stats() {
   return (
-    <section className="container my-5">
-      <div className="row text-center">
+    <section className="pb-5">
+      <div className="container">
+        <div className="bg-white rounded-4 shadow-sm p-4">
+          <div className="row text-center g-4">
+            <div className="col-md-3">
+              <div style={{ fontSize: "2rem" }}>💼</div>
+              <h2 className="fw-bold text-primary mb-0">1000+</h2>
+              <p className="text-muted mb-0">Jobs Posted</p>
+            </div>
 
-        <div className="col-md-3 mb-3">
-          <div className="card shadow p-4">
-            <h2 className="text-primary">1000+</h2>
-            <p>Jobs Posted</p>
+            <div className="col-md-3">
+              <div style={{ fontSize: "2rem" }}>🏢</div>
+              <h2 className="fw-bold text-success mb-0">500+</h2>
+              <p className="text-muted mb-0">Companies</p>
+            </div>
+
+            <div className="col-md-3">
+              <div style={{ fontSize: "2rem" }}>👥</div>
+              <h2 className="fw-bold text-warning mb-0">10K+</h2>
+              <p className="text-muted mb-0">Candidates</p>
+            </div>
+
+            <div className="col-md-3">
+              <div style={{ fontSize: "2rem" }}>📈</div>
+              <h2 className="fw-bold text-danger mb-0">95%</h2>
+              <p className="text-muted mb-0">Success Rate</p>
+            </div>
           </div>
         </div>
-
-        <div className="col-md-3 mb-3">
-          <div className="card shadow p-4">
-            <h2 className="text-success">500+</h2>
-            <p>Companies</p>
-          </div>
-        </div>
-
-        <div className="col-md-3 mb-3">
-          <div className="card shadow p-4">
-            <h2 className="text-danger">10K+</h2>
-            <p>Candidates</p>
-          </div>
-        </div>
-
-        <div className="col-md-3 mb-3">
-          <div className="card shadow p-4">
-            <h2 className="text-warning">95%</h2>
-            <p>Success Rate</p>
-          </div>
-        </div>
-
       </div>
     </section>
   );

@@ -4,6 +4,7 @@ from threading import Thread
 from models import db, User
 from models.application import Application
 from models.job import Job
+from models.interview import Interview
 
 from flask_jwt_extended import (
     jwt_required,
@@ -11,7 +12,8 @@ from flask_jwt_extended import (
     get_jwt
 )
 
-from utils.email import send_email
+from utils.email_utils import send_email
+from models.application_status_history import ApplicationStatusHistory
 
 application_bp = Blueprint("application", __name__)
 
@@ -309,6 +311,7 @@ def update_application_status(id):
     allowed_status = [
         "Applied",
         "Shortlisted",
+        "Interview Scheduled",
         "Rejected",
         "Selected"
     ]
@@ -318,9 +321,18 @@ def update_application_status(id):
             "message": "Invalid status"
         }), 400
 
+    old_status = application.status
+
     application.status = data["status"]
 
+    history = ApplicationStatusHistory(
+        application_id=application.id,
+        old_status=old_status,
+        new_status=application.status
+    )
+
     try:
+        db.session.add(history)
         db.session.commit()
 
     except Exception as e:
@@ -360,4 +372,186 @@ Job Portal Team
     return jsonify({
         "message": "Application status updated successfully",
         "application": application.to_dict()
+    }), 200
+
+# =====================================
+# Schedule Interview
+# =====================================
+
+@application_bp.route("/applications/<int:id>/schedule", methods=["POST"])
+@jwt_required()
+def schedule_interview(id):
+
+    claims = get_jwt()
+
+    if claims["role"] != "recruiter":
+        return jsonify({
+            "message": "Only recruiters can schedule interviews"
+        }), 403
+
+    application = db.session.get(Application, id)
+
+    if not application:
+        return jsonify({
+            "message": "Application not found"
+        }), 404
+
+    job = db.session.get(Job, application.job_id)
+
+    if job.created_by != int(get_jwt_identity()):
+        return jsonify({
+            "message": "You can schedule interviews only for your own jobs"
+        }), 403
+
+    data = request.get_json()
+
+    required_fields = [
+        "interview_date",
+        "interview_time",
+        "mode"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            return jsonify({
+                "message": f"{field} is required"
+            }), 400
+
+    interview = Interview(
+        application_id=application.id,
+        interview_date=data["interview_date"],
+        interview_time=data["interview_time"],
+        mode=data["mode"],
+        meeting_link=data.get("meeting_link"),
+        location=data.get("location"),
+        notes=data.get("notes")
+    )
+
+    application.status = "Interview Scheduled"
+
+    try:
+        db.session.add(interview)
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            "message": "Failed to schedule interview",
+            "error": str(e)
+        }), 500
+
+    candidate = db.session.get(User, application.candidate_id)
+
+    # Send interview email
+    try:
+        send_email(
+            subject="Interview Scheduled",
+            recipients=[candidate.email],
+            body=f"""
+Hello {candidate.full_name},
+
+Your interview has been scheduled.
+
+Job Title: {job.title}
+
+Date: {interview.interview_date}
+Time: {interview.interview_time}
+Mode: {interview.mode}
+
+Meeting Link: {interview.meeting_link or "N/A"}
+Location: {interview.location or "N/A"}
+
+Notes:
+{interview.notes or "No additional notes"}
+
+Best Regards,
+Job Portal Team
+"""
+        )
+
+    except Exception as e:
+        print("Interview Email Error:", e)
+
+    return jsonify({
+        "message": "Interview scheduled successfully",
+        "interview": interview.to_dict()
+    }), 201
+
+# =====================================
+# Candidate - My Interviews
+# =====================================
+
+@application_bp.route("/my-interviews", methods=["GET"])
+@jwt_required()
+def my_interviews():
+
+    claims = get_jwt()
+
+    if claims["role"] != "candidate":
+        return jsonify({
+            "message": "Only candidates can view interviews"
+        }), 403
+
+    candidate_id = int(get_jwt_identity())
+
+    applications = Application.query.filter_by(
+        candidate_id=candidate_id
+    ).all()
+
+    result = []
+
+    for app in applications:
+        interviews = Interview.query.filter_by(
+            application_id=app.id
+        ).all()
+
+        job = db.session.get(Job, app.job_id)
+
+        for interview in interviews:
+            result.append({
+                "id": interview.id,
+                "job_title": job.title if job else "N/A",
+                "company": job.company if job else "N/A",
+                "interview_date": interview.interview_date,
+                "interview_time": interview.interview_time,
+                "mode": interview.mode,
+                "meeting_link": interview.meeting_link,
+                "location": interview.location,
+                "notes": interview.notes
+            })
+
+    return jsonify({
+        "count": len(result),
+        "interviews": result
+    }), 200
+
+# =====================================
+# Get Application Status History
+# =====================================
+
+@application_bp.route("/applications/<int:id>/status-history", methods=["GET"])
+@jwt_required()
+def get_application_status_history(id):
+
+    claims = get_jwt()
+
+    if claims["role"] not in ["recruiter", "admin"]:
+        return jsonify({
+            "message": "Access denied"
+        }), 403
+
+    application = db.session.get(Application, id)
+
+    if not application:
+        return jsonify({
+            "message": "Application not found"
+        }), 404
+
+    history = ApplicationStatusHistory.query.filter_by(
+        application_id=id
+    ).order_by(ApplicationStatusHistory.changed_at.asc()).all()
+
+    return jsonify({
+        "count": len(history),
+        "history": [item.to_dict() for item in history]
     }), 200

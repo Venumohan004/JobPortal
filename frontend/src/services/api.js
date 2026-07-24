@@ -8,23 +8,11 @@ const api = axios.create({
   timeout: 30000,
 });
 
+// Attach JWT token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
-  // Only attach token for protected routes
-  const protectedRoutes = [
-    "/profile",
-    "/applications",
-    "/apply",
-    "/recruiter",
-    "/admin",
-  ];
-
-  const shouldAttachToken = protectedRoutes.some((route) =>
-    config.url.includes(route)
-  );
-
-  if (token && shouldAttachToken) {
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 

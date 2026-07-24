@@ -1,9 +1,17 @@
 function Footer() {
   return (
-    <footer className="bg-dark text-white text-center py-3 mt-5">
-      <p className="mb-0">
-        © 2026 Job Portal. All Rights Reserved.
-      </p>
+    <footer
+      style={{
+        background: "#0f172a",
+        color: "#cbd5e1",
+        padding: "24px 0",
+      }}
+    >
+      <div className="container text-center">
+        <p className="mb-0">
+          © 2026 JobPortal. Built with Flask, React & PostgreSQL.
+        </p>
+      </div>
     </footer>
   );
 }

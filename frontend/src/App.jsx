@@ -6,11 +6,18 @@ import JobDetails from "./pages/JobDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+
 import RecruiterDashboard from "./pages/RecruiterDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+
 import SavedJobs from "./pages/SavedJobs";
 import ResumeUpload from "./pages/ResumeUpload";
-import CreateJob from "./pages/CreateJob"; // Create this file if not available
+import CreateJob from "./pages/CreateJob";
+import EditJob from "./pages/EditJob";
+import ViewApplicants from "./pages/ViewApplicants";
+
+import CandidateDashboard from "./pages/CandidateDashboard";
+import AppliedJobs from "./pages/AppliedJobs";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Navbar from "./components/common/Navbar";
@@ -34,9 +41,18 @@ function App() {
             Candidate Protected Routes
         ========================== */}
         <Route
-          path="/profile"
+          path="/candidate-dashboard"
           element={
             <ProtectedRoute allowedRoles={["candidate"]}>
+              <CandidateDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={["candidate", "recruiter"]}>
               <Profile />
             </ProtectedRoute>
           }
@@ -47,6 +63,15 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["candidate"]}>
               <SavedJobs />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/applied-jobs"
+          element={
+            <ProtectedRoute allowedRoles={["candidate"]}>
+              <AppliedJobs />
             </ProtectedRoute>
           }
         />
@@ -64,7 +89,7 @@ function App() {
             Recruiter Protected Routes
         ========================== */}
         <Route
-          path="/recruiter/dashboard"
+          path="/recruiter-dashboard"
           element={
             <ProtectedRoute allowedRoles={["recruiter"]}>
               <RecruiterDashboard />
@@ -81,11 +106,29 @@ function App() {
           }
         />
 
+        <Route
+          path="/edit-job/:id"
+          element={
+            <ProtectedRoute allowedRoles={["recruiter"]}>
+              <EditJob />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/job/:id/applicants"
+          element={
+            <ProtectedRoute allowedRoles={["recruiter"]}>
+              <ViewApplicants />
+            </ProtectedRoute>
+          }
+        />
+
         {/* =========================
             Admin Protected Routes
         ========================== */}
         <Route
-          path="/admin/dashboard"
+          path="/admin-dashboard"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminDashboard />
@@ -94,13 +137,16 @@ function App() {
         />
 
         {/* =========================
-            Fallback Route
+            404 Route
         ========================== */}
         <Route
           path="*"
           element={
             <div className="container py-5 text-center">
               <h2>404 - Page Not Found</h2>
+              <p className="text-muted">
+                The page you are looking for does not exist.
+              </p>
             </div>
           }
         />

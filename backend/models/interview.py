@@ -13,21 +13,20 @@ class Interview(db.Model):
         nullable=False
     )
 
-    interview_date = db.Column(db.String(30), nullable=False)
-
-    interview_time = db.Column(db.String(30), nullable=False)
+    interview_date = db.Column(db.Date)
+    interview_time = db.Column(db.Time)
 
     mode = db.Column(db.String(50), nullable=False)
 
     meeting_link = db.Column(db.String(500))
+    location = db.Column(db.String(255), nullable=True)
+    notes = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationship
     application = db.relationship(
         "Application",
-        backref="interviews",
-        lazy=True
+        back_populates="interviews"
     )
 
     def to_dict(self):
@@ -38,5 +37,7 @@ class Interview(db.Model):
             "interview_time": self.interview_time,
             "mode": self.mode,
             "meeting_link": self.meeting_link,
+            "location": self.location,
+            "notes": self.notes,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }

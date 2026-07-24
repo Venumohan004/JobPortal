@@ -39,6 +39,7 @@ class User(db.Model):
         nullable=False
     )
 
+    # Relationships
     candidate = db.relationship(
         "Candidate",
         backref="user",
@@ -65,13 +66,11 @@ class User(db.Model):
         lazy=True
     )
 
-    # Stores profile resume path (optional)
+    # Profile fields
     resume = db.Column(db.String(255))
-
     profile_image = db.Column(db.String(255))
-
     location = db.Column(db.String(100))
-
+    skills = db.Column(db.Text)
     bio = db.Column(db.Text)
 
     created_at = db.Column(
@@ -79,16 +78,6 @@ class User(db.Model):
         default=datetime.utcnow,
         nullable=False
     )
-    # Stores profile resume path (optional)
-    resume = db.Column(db.String(255))
-
-    profile_image = db.Column(db.String(255))
-
-    location = db.Column(db.String(100))
-
-    skills = db.Column(db.Text)   # 👈 ADD THIS LINE
-
-    bio = db.Column(db.Text)
 
     def to_dict(self):
         return {
@@ -98,11 +87,14 @@ class User(db.Model):
             "phone": self.phone,
             "role": self.role,
             "location": self.location,
-            "skills": self.skills,   # 👈 ADD THIS
+            "skills": self.skills,
             "bio": self.bio,
             "resume": self.resume,
             "profile_image": self.profile_image,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": (
+                self.created_at.isoformat()
+                if self.created_at else None
+            )
         }
 
     def __repr__(self):

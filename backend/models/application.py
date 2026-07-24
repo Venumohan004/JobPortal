@@ -17,15 +17,16 @@ class Application(db.Model):
     nullable=False
     )
     status = db.Column(
-    db.Enum(
-        "Applied",
-        "Shortlisted",
-        "Rejected",
-        "Selected",
-        name="application_status"
-    ),
-    default="Applied",
-    nullable=False
+        db.Enum(
+            "Applied",
+            "Shortlisted",
+            "Interview Scheduled",
+            "Rejected",
+            "Selected",
+            name="application_status"
+        ),
+        default="Applied",
+        nullable=False
     )
 
     created_at = db.Column(
@@ -37,6 +38,13 @@ class Application(db.Model):
         "User",
         back_populates="applications"
     )
+
+    interviews = db.relationship(
+    "Interview",
+    back_populates="application",
+    cascade="all, delete-orphan"
+    )
+    
     updated_at = db.Column(
         db.DateTime,
         default=datetime.utcnow,

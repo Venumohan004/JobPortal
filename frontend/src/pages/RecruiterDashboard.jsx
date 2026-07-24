@@ -51,6 +51,29 @@ function RecruiterDashboard() {
     }
   };
 
+  // Delete job
+  const handleDelete = async (jobId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this job?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`/jobs/${jobId}`);
+
+      // Remove from UI instantly
+      setJobs(jobs.filter((job) => job.job_id !== jobId));
+
+      alert("Job deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      alert(
+        err.response?.data?.message || "Failed to delete job"
+      );
+    }
+  };
+
   // Calculate totals
   const totalJobs = jobs.length;
   const totalApplications = jobs.reduce(
@@ -69,16 +92,23 @@ function RecruiterDashboard() {
 
   return (
     <div className="dashboard-container">
-      <h1>Recruiter Dashboard</h1>
-          <Link to="/create-job" className="btn btn-primary">
-            + Post New Job
-          </Link>
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>Recruiter Dashboard</h1>
+
+        <Link to="/create-job" className="btn btn-primary">
+          + Post New Job
+        </Link>
+      </div>
+
+      {/* Error */}
       {error && (
         <div className="alert alert-warning">
           {error}
         </div>
       )}
 
+      {/* Main Content */}
       {profile && (
         <>
           {/* Stats Cards */}
@@ -145,6 +175,7 @@ function RecruiterDashboard() {
                     <th>Job Title</th>
                     <th>Company</th>
                     <th>Applications</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
 
@@ -154,6 +185,32 @@ function RecruiterDashboard() {
                       <td>{job.title}</td>
                       <td>{job.company}</td>
                       <td>{job.applications}</td>
+
+                      <td>
+                        {/* Edit */}
+                        <Link
+                          to={`/edit-job/${job.job_id}`}
+                          className="btn btn-warning btn-sm me-2"
+                        >
+                          Edit
+                        </Link>
+
+                        {/* Applicants */}
+                        <Link
+                          to={`/job/${job.job_id}/applicants`}
+                          className="btn btn-info btn-sm me-2"
+                        >
+                          Applicants
+                        </Link>
+
+                        {/* Delete */}
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(job.job_id)}
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
