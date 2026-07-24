@@ -427,7 +427,7 @@ def schedule_interview(id):
         notes=data.get("notes")
     )
 
-    application.status = "Interview_Scheduled"
+    application.status = "Interview Scheduled"
 
     try:
         db.session.add(interview)
