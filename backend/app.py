@@ -162,3 +162,10 @@ if __name__ == "__main__":
         port=5000,
         debug=False
     )
+
+@app.route("/check-enum")
+def check_enum():
+    from models.application import Application
+    return {
+        "enum": Application.status.type.enums
+    }
