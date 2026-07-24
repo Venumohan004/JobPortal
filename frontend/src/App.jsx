@@ -21,6 +21,7 @@ import AppliedJobs from "./pages/AppliedJobs";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Navbar from "./components/common/Navbar";
+import ScheduleInterview from "./pages/ScheduleInterview";
 
 function App() {
   return (
@@ -36,7 +37,8 @@ function App() {
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
+        <Route path="/schedule-interview/:applicationId" element={<ScheduleInterview />} />
+        
         {/* =========================
             Candidate Protected Routes
         ========================== */}

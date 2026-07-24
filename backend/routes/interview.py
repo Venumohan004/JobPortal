@@ -52,7 +52,7 @@ def schedule_interview():
         db.session.add(interview)
 
         # Update application status
-        application.status = "Interview Scheduled"
+        application.status = "Interview_Scheduled"
 
         # Save to database first
         db.session.commit()
