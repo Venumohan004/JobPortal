@@ -21,6 +21,10 @@ from routes.interview import interview_bp
 from routes.profile import profile_bp
 from routes.candidate_interview_routes import candidate_interview_bp
 
+from flask import jsonify
+from models import db
+
+
 app = Flask(__name__)
 
 Swagger(app)
@@ -74,6 +78,9 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(interview_bp, url_prefix="/interviews")
 app.register_blueprint(profile_bp)
 app.register_blueprint(candidate_interview_bp)
+
+
+
 
 # =====================
 # Basic Routes
@@ -134,7 +141,27 @@ def config_test():
         "MAIL_DEFAULT_SENDER": app.config.get("MAIL_DEFAULT_SENDER"),
         "MAIL_USE_TLS": app.config.get("MAIL_USE_TLS")
     }
+@app.route("/debug/db")
+def debug_db():
+    db_name = db.session.execute(
+        db.text("SELECT current_database()")
+    ).scalar()
 
+    enum_values = db.session.execute(
+        db.text("""
+        SELECT enumlabel
+        FROM pg_enum
+        JOIN pg_type
+        ON pg_enum.enumtypid = pg_type.oid
+        WHERE typname='application_status'
+        ORDER BY enumsortorder;
+        """)
+    ).fetchall()
+
+    return jsonify({
+        "database": db_name,
+        "enum": [row[0] for row in enum_values]
+    })
 # =====================
 # Error Handlers
 # =====================
@@ -171,31 +198,5 @@ def check_enum():
         "enum": Application.status.type.enums
     }
 
-from flask import Blueprint, jsonify
-from models import db
 
-debug_bp = Blueprint("debug", __name__)
-
-app.register_blueprint(debug_bp)
-
-@debug_bp.route("/debug/db")
-def debug_db():
-    db_name = db.session.execute(
-        db.text("SELECT current_database()")
-    ).scalar()
-
-    enum_values = db.session.execute(
-        db.text("""
-        SELECT enumlabel
-        FROM pg_enum
-        JOIN pg_type ON pg_enum.enumtypid = pg_type.oid
-        WHERE typname='application_status'
-        ORDER BY enumsortorder;
-        """)
-    ).fetchall()
-
-    return jsonify({
-        "database": db_name,
-        "enum": [row[0] for row in enum_values]
-    })
 
