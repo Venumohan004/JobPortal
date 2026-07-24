@@ -5,6 +5,7 @@ from models import db, User
 from models.application import Application
 from models.job import Job
 from models.interview import Interview
+import traceback
 
 from flask_jwt_extended import (
     jwt_required,
@@ -337,8 +338,10 @@ def update_application_status(id):
 
     except Exception as e:
         db.session.rollback()
+        traceback.print_exc()
+
         return jsonify({
-            "message": "Failed to update application status",
+            "message": "Failed to schedule interview",
             "error": str(e)
         }), 500
 
@@ -426,7 +429,7 @@ def schedule_interview(id):
         location=data.get("location"),
         notes=data.get("notes")
     )
-    
+
     print(Application.status.type.enums)
     application.status = "Interview Scheduled"
 
