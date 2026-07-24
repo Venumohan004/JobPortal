@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import SQLAlchemyError
-
+import traceback
 from models import db, Interview, Application, Candidate, Job, User
 from utils.recruiter_required import recruiter_required
 from utils.email_utils import send_interview_email
@@ -51,9 +51,13 @@ def schedule_interview():
 
         db.session.add(interview)
 
+        print("Application status type:", type(application.status))
+        print("Allowed enums:", Application.status.type.enums)
+        print("Setting status to:", repr("Interview Scheduled"))
+
         # Update application status
         application.status = "Interview Scheduled"
-
+        print("Before commit:", application.status)
         # Save to database first
         db.session.commit()
 
@@ -104,7 +108,12 @@ def schedule_interview():
 
     except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({"message": str(e)}), 500
+        traceback.print_exc()
+
+        return jsonify({
+            "message": str(e)
+        }), 500
+       
 
     except Exception as e:
         db.session.rollback()
