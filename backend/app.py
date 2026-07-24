@@ -170,3 +170,32 @@ def check_enum():
     return {
         "enum": Application.status.type.enums
     }
+
+from flask import Blueprint, jsonify
+from models import db
+
+debug_bp = Blueprint("debug", __name__)
+
+app.register_blueprint(debug_bp)
+
+@debug_bp.route("/debug/db")
+def debug_db():
+    db_name = db.session.execute(
+        db.text("SELECT current_database()")
+    ).scalar()
+
+    enum_values = db.session.execute(
+        db.text("""
+        SELECT enumlabel
+        FROM pg_enum
+        JOIN pg_type ON pg_enum.enumtypid = pg_type.oid
+        WHERE typname='application_status'
+        ORDER BY enumsortorder;
+        """)
+    ).fetchall()
+
+    return jsonify({
+        "database": db_name,
+        "enum": [row[0] for row in enum_values]
+    })
+
