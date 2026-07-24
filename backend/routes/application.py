@@ -426,7 +426,8 @@ def schedule_interview(id):
         location=data.get("location"),
         notes=data.get("notes")
     )
-
+    
+    print(Application.status.type.enums)
     application.status = "Interview Scheduled"
 
     try:
