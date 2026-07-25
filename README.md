@@ -897,7 +897,7 @@ The backend has been tested using **Postman**.
 
 ### Interview Scheduled successfully
 
-![Interview_success](screenshots/interview_success.png)
+![Interview](screenshots/interview_sucess.png)
 
 ---
 
