@@ -27,6 +27,9 @@ from models import db
 from flask_mail import Message
 from extensions import mail
 
+from flask import jsonify
+import socket
+
 app = Flask(__name__)
 
 Swagger(app)
@@ -197,6 +200,19 @@ def mail_debug():
         "MAIL_TIMEOUT": app.config.get("MAIL_TIMEOUT"),
     }
 
+@app.route("/socket-test")
+def socket_test():
+    try:
+        socket.create_connection(("smtp.gmail.com", 587), timeout=10)
+        return jsonify({
+            "success": True
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "type": type(e).__name__
+        }), 500
 # =====================
 # Error Handlers
 # =====================
