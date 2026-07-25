@@ -186,7 +186,17 @@ def test_mail():
         return {
             "error": str(e)
         }, 500
-    
+
+@app.route("/mail-debug")
+def mail_debug():
+    return {
+        "MAIL_SERVER": app.config.get("MAIL_SERVER"),
+        "MAIL_PORT": app.config.get("MAIL_PORT"),
+        "MAIL_USE_TLS": app.config.get("MAIL_USE_TLS"),
+        "MAIL_USE_SSL": app.config.get("MAIL_USE_SSL"),
+        "MAIL_TIMEOUT": app.config.get("MAIL_TIMEOUT"),
+    }
+
 # =====================
 # Error Handlers
 # =====================
