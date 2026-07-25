@@ -9,7 +9,6 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791?style=for-the-badge&logo=postgresql)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-ORM-red?style=for-the-badge)
 ![JWT](https://img.shields.io/badge/JWT-Authentication-green?style=for-the-badge)
-![Flask-Mail](https://img.shields.io/badge/Flask-Mail-orange?style=for-the-badge)
 ![Render](https://img.shields.io/badge/Render-Deployed-46E3B7?style=for-the-badge&logo=render)
 ![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)
 ![Status](https://img.shields.io/badge/Status-Completed-success?style=for-the-badge)
@@ -27,22 +26,19 @@
 
 The project consists of a **Flask REST API Backend**, a **React + Vite Frontend**, and a **PostgreSQL Database**, providing complete recruitment workflow management—from user authentication and job posting to interview scheduling and application tracking.
 
-The application follows modern backend development practices including **RESTful API architecture**, **JWT Authentication**, **Role-Based Authorization**, **SQLAlchemy ORM**, **Alembic Database Migrations**, and **Email Notifications**.
+The application follows modern backend development practices including **RESTful API architecture**, **JWT Authentication**, **Role-Based Authorization**, **SQLAlchemy ORM**, **Alembic Database Migrations**.
 
 ---
 
 ## 🌐 Live Demo
 
 ### Frontend
-
 https://jobportal-frontend-uojm.onrender.com
 
 ### Backend API
-
 https://jobportal-aver.onrender.com
 
 ### GitHub Repository
-
 https://github.com/Venumohan004/JobPortal
 
 ---
@@ -58,7 +54,6 @@ https://github.com/Venumohan004/JobPortal
 - 📋 Job Application Tracking
 - 📊 Application Status History
 - 📅 Interview Scheduling
-- 📧 Email Notifications
 - 📈 Recruiter Dashboard
 - 👨‍💼 Candidate Dashboard
 - 👑 Admin Dashboard
@@ -126,7 +121,6 @@ https://github.com/Venumohan004/JobPortal
 - View Scheduled Interviews
 - Recruiter Dashboard
 - Hiring Analytics
-- Send Interview Notifications
 
 ---
 
@@ -190,19 +184,7 @@ https://github.com/Venumohan004/JobPortal
 - Recruiter Interview Dashboard
 - Google Meet Support
 - Zoom Support
-- Email Notifications
 - JWT Protected APIs
-
----
-
-## 📧 Email Notifications
-
-The system automatically sends emails for:
-
-- New Job Applications
-- Application Status Updates
-- Interview Scheduling
-- Password Reset Requests
 
 ---
 
@@ -219,8 +201,8 @@ The system automatically sends emails for:
                              │
       ┌──────────────┬──────────────┬──────────────┐
       │              │              │
- Authentication    Business      Email Service
-   (JWT)            Logic        (Flask-Mail)
+ Authentication    Business       Database
+   (JWT)            Logic     
       │              │              │
       └──────────────┴──────────────┘
                      │
@@ -244,7 +226,6 @@ The system automatically sends emails for:
 | ORM | SQLAlchemy |
 | Authentication | Flask-JWT-Extended |
 | Database Migration | Flask-Migrate + Alembic |
-| Email Service | Flask-Mail |
 | File Upload | Flask File Handling |
 | API Testing | Postman |
 | Frontend HTTP Client | Axios |
@@ -278,7 +259,7 @@ Update Status
 Interview Scheduled
     │
     ▼
-Candidate Receives Email
+Candidate Views Interview Details
     │
     ▼
 Interview Process
@@ -622,7 +603,6 @@ Main Python packages used in this project:
 - Flask-JWT-Extended
 - Flask-SQLAlchemy
 - Flask-Migrate
-- Flask-Mail
 - Flask-CORS
 - SQLAlchemy
 - psycopg2
@@ -739,7 +719,6 @@ The application is organized into modular Flask Blueprints for better maintainab
 
 | Method | Endpoint | Description |
 |----------|----------|-------------|
-| POST | `/applications/<id>/schedule` | Schedule interview |
 | POST | `/interviews` | Create interview |
 | GET | `/interviews` | List interviews |
 | GET | `/interviews/<id>` | Interview details |
@@ -814,24 +793,7 @@ The backend includes several security mechanisms:
 - Secure File Upload Handling
 - Environment Variable Configuration
 - Database Migration Management
-- Background Email Processing
 - SQLAlchemy ORM Protection against SQL Injection
-
----
-
-# 📧 Email Notifications
-
-The system automatically sends email notifications for important events.
-
-### Candidate Notifications
-
-- Interview Scheduled
-- Application Status Updated
-- Password Reset
-
-### Recruiter Notifications
-
-- New Job Application Received
 
 ---
 
@@ -898,15 +860,12 @@ The backend has been tested using **Postman**.
 - Application Status Updates
 - Application Status History
 - Password Reset
-- Email Notifications
 - PostgreSQL Integration
 - Render Deployment
 
 ---
 
 # 📸 Screenshots
-
-> Replace these placeholder images with your own screenshots.
 
 ### Home Page
 
@@ -920,6 +879,10 @@ The backend has been tested using **Postman**.
 
 ![Recruiter Dashboard](screenshots/recruiter_dashboard.png)
 
+### Create Job Details
+
+![Create Job Details](screenshots/create-job.png)
+
 ### Job Details
 
 ![Job Details](screenshots/job_details.png)
@@ -932,6 +895,10 @@ The backend has been tested using **Postman**.
 
 ![Interview](screenshots/interview_schedule.png)
 
+### Interview Scheduled successfully
+
+![Interview_success](screenshots/interview_success.png)
+
 ---
 
 # 📈 Project Statistics
@@ -943,9 +910,9 @@ The backend has been tested using **Postman**.
 - JWT Authentication
 - PostgreSQL Database
 - SQLAlchemy ORM
-- Flask-Mail Integration
+- Interview Scheduling
+- Application Status Tracking
 - Alembic Migrations
-- Background Email Processing
 - Role-Based Authorization
 
 ### Frontend
