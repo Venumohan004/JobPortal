@@ -297,6 +297,15 @@ def update_application_status(id):
 
     job = db.session.get(Job, application.job_id)
 
+    existing_interview = Interview.query.filter_by(
+        application_id=application.id
+    ).first()
+
+    if existing_interview:
+        return jsonify({
+            "message": "Interview already scheduled for this application."
+        }), 400
+    
     if job.created_by != int(get_jwt_identity()):
         return jsonify({
             "message": "You can update only applications for your own jobs"
@@ -430,19 +439,27 @@ def schedule_interview(id):
         notes=data.get("notes")
     )
 
-    print(Application.status.type.enums)
+    old_status = application.status
+
     application.status = "Interview Scheduled"
+
+    history = ApplicationStatusHistory(
+        application_id=application.id,
+        old_status=old_status,
+        new_status="Interview Scheduled"
+    )
 
     try:
         db.session.add(interview)
+        db.session.add(history)
         db.session.commit()
 
     except Exception as e:
         db.session.rollback()
         return jsonify({
-            "message": "Failed to schedule interview",
-            "error": str(e)
-        }), 500
+        "message": "Failed to update application status",
+        "error": str(e)
+    }), 500
 
     candidate = db.session.get(User, application.candidate_id)
 
