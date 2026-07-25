@@ -1,12 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import SQLAlchemyError
-import traceback
-from models import db, Interview, Application, Candidate, Job, User
+from models import db, Interview, Application, Job, User
 from utils.recruiter_required import recruiter_required
 from utils.email_utils import send_interview_email
-from flask import Blueprint, request, jsonify, current_app
-from threading import Thread
+from datetime import datetime
 
 interview_bp = Blueprint("interview", __name__)
 
@@ -35,11 +33,40 @@ def schedule_interview():
                 "message": "application_id, interview_date, interview_time and mode are required."
             }), 400
 
+        interview_date = datetime.strptime(
+            interview_date,
+            "%Y-%m-%d"
+        ).date()
+
+        interview_time = datetime.strptime(
+            interview_time,
+            "%H:%M"
+        ).time()
+
+        if mode.lower() == "online" and not meeting_link:
+            return jsonify({
+                "message": "Meeting link is required for online interviews."
+            }), 400
+
+        if mode.lower() == "offline" and not location:
+            return jsonify({
+                "message": "Location is required for offline interviews."
+            }), 400
+
         # Get application
         application = db.session.get(Application, application_id)
 
         if application is None:
             return jsonify({"message": "Application not found"}), 404
+
+        existing = Interview.query.filter_by(
+            application_id=application.id
+        ).first()
+
+        if existing:
+            return jsonify({
+                "message": "Interview already scheduled for this application."
+            }), 409
 
         # Create interview
         interview = Interview(
@@ -53,13 +80,13 @@ def schedule_interview():
 
         db.session.add(interview)
 
-        print("Application status type:", type(application.status))
-        print("Allowed enums:", Application.status.type.enums)
-        print("Setting status to:", repr("Interview Scheduled"))
+        current_app.logger.info(
+            f"Interview scheduled for application {application.id}"
+        )
 
         # Update application status
         application.status = "Interview Scheduled"
-        print("Before commit:", application.status)
+
         # Save to database first
         db.session.commit()
 
@@ -67,24 +94,21 @@ def schedule_interview():
         # Prepare email data
         # =====================================
 
-        candidate = Candidate.query.filter_by(
-            user_id=application.candidate_id
-        ).first()
-
-        if candidate is None:
-            return jsonify({"message": "Candidate not found"}), 404
-
-        user = db.session.get(User, candidate.user_id)
+        user = db.session.get(User, application.candidate_id)
 
         if user is None:
-            return jsonify({"message": "Candidate user account not found"}), 404
+            return jsonify({
+                "message": "Candidate user account not found"
+            }), 404
 
+        # Create interview_data dictionary
         job = db.session.get(Job, application.job_id)
 
         if job is None:
-            return jsonify({"message": "Job not found"}), 404
-
-        # Create interview_data dictionary
+            return jsonify({
+                "message": "Job not found"
+            }), 404
+        
         interview_data = {
             "job_title": job.title,
             "company_name": job.company,   # <-- change this
@@ -95,12 +119,21 @@ def schedule_interview():
             "location": interview.location
         }
 
-        # Send email (do not fail API if email fails)
-        email_sent = send_interview_email(
-            candidate_email=user.email,
-            candidate_name=user.full_name,   # use user.username if your model uses username
-            interview_data=interview_data
-        )
+        # ==========================
+        # Send Email (Optional)
+        # ==========================
+
+        email_sent = False
+
+        try:
+            email_sent = send_interview_email(
+                candidate_email=user.email,
+                candidate_name=user.full_name,
+                interview_data=interview_data
+            )
+        except Exception as e:
+            current_app.logger.error(f"Email failed: {str(e)}")
+            email_sent = False
 
         return jsonify({
             "message": "Interview scheduled successfully",
@@ -110,7 +143,7 @@ def schedule_interview():
 
     except SQLAlchemyError as e:
         db.session.rollback()
-        traceback.print_exc()
+        current_app.logger.exception(e)
 
         return jsonify({
             "message": str(e)
@@ -119,6 +152,7 @@ def schedule_interview():
 
     except Exception as e:
         db.session.rollback()
+        current_app.logger.exception(e)
         return jsonify({"message": str(e)}), 500
             
 # =====================================
@@ -170,15 +204,17 @@ def update_interview(id):
         if not data:
             return jsonify({"message": "Request body is required"}), 400
 
-        interview.interview_date = data.get(
-            "interview_date",
-            interview.interview_date
-        )
+        if data.get("interview_date"):
+            interview.interview_date = datetime.strptime(
+                data["interview_date"],
+                "%Y-%m-%d"
+            ).date()
 
-        interview.interview_time = data.get(
-            "interview_time",
-            interview.interview_time
-        )
+        if data.get("interview_time"):
+            interview.interview_time = datetime.strptime(
+                data["interview_time"],
+                "%H:%M"
+            ).time()
 
         interview.mode = data.get(
             "mode",
@@ -188,6 +224,15 @@ def update_interview(id):
         interview.meeting_link = data.get(
             "meeting_link",
             interview.meeting_link
+        )
+        interview.location = data.get(
+            "location",
+            interview.location
+        )
+
+        interview.notes = data.get(
+            "notes",
+            interview.notes
         )
 
         db.session.commit()
@@ -203,6 +248,7 @@ def update_interview(id):
 
     except Exception as e:
         db.session.rollback()
+        current_app.logger.exception(e)
         return jsonify({"message": str(e)}), 500
 
 
@@ -233,4 +279,5 @@ def delete_interview(id):
 
     except Exception as e:
         db.session.rollback()
+        current_app.logger.exception(e)
         return jsonify({"message": str(e)}), 500
