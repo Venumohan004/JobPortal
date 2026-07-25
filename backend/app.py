@@ -24,6 +24,8 @@ from routes.candidate_interview_routes import candidate_interview_bp
 from flask import jsonify
 from models import db
 
+from flask_mail import Message
+from extensions import mail
 
 app = Flask(__name__)
 
@@ -162,6 +164,29 @@ def debug_db():
         "database": db_name,
         "enum": [row[0] for row in enum_values]
     })
+
+@app.route("/test-mail")
+def test_mail():
+    try:
+        msg = Message(
+            subject="Render Mail Test",
+            recipients=["pvenumohan831@gmail.com"],
+            body="This is a test email from Flask-Mail on Render."
+        )
+
+        mail.send(msg)
+
+        return {
+            "message": "Email sent successfully"
+        }
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "error": str(e)
+        }, 500
+    
 # =====================
 # Error Handlers
 # =====================
