@@ -4,13 +4,16 @@ from flask_mail import Message
 from extensions import mail
 
 
+from flask import current_app
+from flask_mail import Message
+from extensions import mail
+
+
 def send_email(subject, recipients, body):
-    """
-    Generic email sender.
-    """
     try:
         msg = Message(
             subject=subject,
+            sender=current_app.config["MAIL_DEFAULT_SENDER"],
             recipients=recipients,
             body=body
         )
@@ -24,7 +27,7 @@ def send_email(subject, recipients, body):
         return True
 
     except Exception as e:
-        current_app.logger.error(str(e))
+        current_app.logger.exception(e)
         return False
 
 

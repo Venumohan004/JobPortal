@@ -1,9 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import SQLAlchemyError
-from models import db, Interview, Application, Job, User
+from models import db, Interview, Application
 from utils.recruiter_required import recruiter_required
-from utils.email_utils import send_interview_email
 from datetime import datetime
 
 interview_bp = Blueprint("interview", __name__)
@@ -90,54 +89,8 @@ def schedule_interview():
         # Save to database first
         db.session.commit()
 
-        # =====================================
-        # Prepare email data
-        # =====================================
-
-        user = db.session.get(User, application.candidate_id)
-
-        if user is None:
-            return jsonify({
-                "message": "Candidate user account not found"
-            }), 404
-
-        # Create interview_data dictionary
-        job = db.session.get(Job, application.job_id)
-
-        if job is None:
-            return jsonify({
-                "message": "Job not found"
-            }), 404
-        
-        interview_data = {
-            "job_title": job.title,
-            "company_name": job.company,   # <-- change this
-            "interview_date": interview.interview_date,
-            "interview_time": interview.interview_time,
-            "mode": interview.mode,
-            "meeting_link": interview.meeting_link,
-            "location": interview.location
-        }
-
-        # ==========================
-        # Send Email (Optional)
-        # ==========================
-
-        email_sent = False
-
-        try:
-            email_sent = send_interview_email(
-                candidate_email=user.email,
-                candidate_name=user.full_name,
-                interview_data=interview_data
-            )
-        except Exception as e:
-            current_app.logger.error(f"Email failed: {str(e)}")
-            email_sent = False
-
         return jsonify({
             "message": "Interview scheduled successfully",
-            "email_sent": email_sent,
             "interview": interview.to_dict()
         }), 201
 
