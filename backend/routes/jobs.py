@@ -142,7 +142,9 @@ def get_jobs():
 
     elif sort == "title":
         query = query.order_by(Job.title.asc())
-
+    else:
+        query = query.order_by(Job.created_at.desc())
+        
     pagination = query.paginate(
         page=page,
         per_page=per_page,

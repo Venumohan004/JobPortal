@@ -5,19 +5,23 @@ import api from "../../api";
 function FeaturedJobs() {
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    api
-      .get("/jobs?sort=salary_desc&per_page=3")
-      .then((response) => {
-        setFeaturedJobs(response.data.jobs || []);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Failed to load featured jobs:", error);
-        setLoading(false);
-      });
-  }, []);
+   useEffect(() => {
+      api
+        .get("/jobs?sort=salary_desc&per_page=3", {
+          timeout: 6000,
+        })
+        .then((response) => {
+          setFeaturedJobs(response.data.jobs || []);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error("Failed to load featured jobs:", error);
+          setError("Featured jobs could not be loaded.");
+          setLoading(false);
+        });
+    }, []);
 
   return (
     <section className="py-5">
@@ -34,7 +38,11 @@ function FeaturedJobs() {
           <div className="text-center">
             <p>Loading featured jobs...</p>
           </div>
-        ) : featuredJobs.length === 0 ? (
+        ) : error ? (
+          <div className="text-center">
+            <p className="text-muted">{error}</p>
+          </div>
+        ): featuredJobs.length === 0 ? (
           <div className="text-center">
             <p>No jobs available right now.</p>
           </div>
@@ -110,7 +118,7 @@ function FeaturedJobs() {
             to="/jobs"
             className="btn btn-outline-primary rounded-pill px-4"
           >
-            View All Jobs
+            View Jobs
           </Link>
         </div>
 
