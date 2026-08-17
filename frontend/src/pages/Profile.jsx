@@ -48,8 +48,8 @@ function Profile() {
   const payload = {
     company_name: profile.company_name,
     company_email: profile.company_email,
-    company_location: profile.location,
-    company_website: profile.website,
+    company_location: profile.company_location,
+    company_website: profile.company_website,
   };
 
   console.log("Sending payload:", payload);
@@ -119,7 +119,7 @@ function Profile() {
                 type="text"
                 name="location"
                 className="form-control"
-                value={profile.location}
+                value={profile.company_location}
                 onChange={handleChange}
                 required
               />
@@ -131,7 +131,7 @@ function Profile() {
                 type="url"
                 name="website"
                 className="form-control"
-                value={profile.website}
+                value={profile.company_website}
                 onChange={handleChange}
               />
             </div>
