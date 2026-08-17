@@ -19,9 +19,14 @@ function Profile() {
     }
   }, [role]);
 
+  // =========================
+  // Get Recruiter Profile
+  // =========================
   const fetchRecruiterProfile = async () => {
     try {
       const res = await api.get("/recruiter/profile");
+
+      console.log("Profile response:", res.data);
 
       setProfile({
         company_name: res.data.company_name || "",
@@ -34,6 +39,9 @@ function Profile() {
     }
   };
 
+  // =========================
+  // Handle Input
+  // =========================
   const handleChange = (e) => {
     setProfile({
       ...profile,
@@ -41,56 +49,74 @@ function Profile() {
     });
   };
 
+  // =========================
+  // Save / Update Profile
+  // =========================
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Send exact field names expected by backend
-  const payload = {
-    company_name: profile.company_name,
-    company_email: profile.company_email,
-    company_location: profile.company_location,
-    company_website: profile.company_website,
+    const payload = {
+      company_name: profile.company_name,
+      company_email: profile.company_email,
+      company_location: profile.location,
+      company_website: profile.website,
+    };
+
+    console.log("Sending payload:", payload);
+
+    try {
+      const res = await api.put("/recruiter/profile", payload);
+
+      console.log("Save response:", res.data);
+
+      setMessage("Recruiter profile saved successfully!");
+
+      // Get latest data from backend
+      await fetchRecruiterProfile();
+
+    } catch (err) {
+      console.error(
+        "Save error:",
+        err.response?.data || err.message
+      );
+
+      setMessage(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Failed to save profile"
+      );
+    }
   };
-
-  console.log("Sending payload:", payload);
-
-  try {
-    const res = await api.put("/recruiter/profile", payload);
-
-    console.log("Save response:", res.data);
-
-    setMessage("Recruiter profile saved successfully!");
-
-    // Refresh profile after save
-    fetchRecruiterProfile();
-  } catch (err) {
-    console.error("Save error:", err.response?.data || err.message);
-
-    // Show backend error message if available
-    setMessage(
-      err.response?.data?.message ||
-      err.response?.data?.error ||
-      "Failed to save profile"
-    );
-  }
-};
 
   // =========================
   // Recruiter Profile
   // =========================
   if (role === "recruiter") {
     return (
-      <div className="container py-5" style={{ maxWidth: "700px" }}>
+      <div
+        className="container py-5"
+        style={{ maxWidth: "700px" }}
+      >
         <div className="card shadow p-4">
-          <h2 className="mb-4">Recruiter Profile</h2>
+
+          <h2 className="mb-4">
+            Recruiter Profile
+          </h2>
 
           {message && (
-            <div className="alert alert-info">{message}</div>
+            <div className="alert alert-info">
+              {message}
+            </div>
           )}
 
           <form onSubmit={handleSubmit}>
+
+            {/* Company Name */}
             <div className="mb-3">
-              <label className="form-label">Company Name</label>
+              <label className="form-label">
+                Company Name
+              </label>
+
               <input
                 type="text"
                 name="company_name"
@@ -101,8 +127,12 @@ function Profile() {
               />
             </div>
 
+            {/* Company Email */}
             <div className="mb-3">
-              <label className="form-label">Company Email</label>
+              <label className="form-label">
+                Company Email
+              </label>
+
               <input
                 type="email"
                 name="company_email"
@@ -113,32 +143,44 @@ function Profile() {
               />
             </div>
 
+            {/* Location */}
             <div className="mb-3">
-              <label className="form-label">Location</label>
+              <label className="form-label">
+                Location
+              </label>
+
               <input
                 type="text"
                 name="location"
                 className="form-control"
-                value={profile.company_location}
+                value={profile.location}
                 onChange={handleChange}
                 required
               />
             </div>
 
+            {/* Website */}
             <div className="mb-4">
-              <label className="form-label">Website</label>
+              <label className="form-label">
+                Website
+              </label>
+
               <input
                 type="url"
                 name="website"
                 className="form-control"
-                value={profile.company_website}
+                value={profile.website}
                 onChange={handleChange}
               />
             </div>
 
-            <button type="submit" className="btn btn-primary">
+            <button
+              type="submit"
+              className="btn btn-primary"
+            >
               Save Profile
             </button>
+
           </form>
         </div>
       </div>
@@ -152,7 +194,9 @@ function Profile() {
     <div className="container py-5">
       <div className="card shadow p-4">
         <h2>My Profile</h2>
-        <p className="text-muted">Welcome! You are logged in.</p>
+        <p className="text-muted">
+          Welcome! You are logged in.
+        </p>
       </div>
     </div>
   );
