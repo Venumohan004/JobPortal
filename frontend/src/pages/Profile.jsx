@@ -100,7 +100,7 @@ function Profile() {
         <div className="card shadow p-4">
 
           <h2 className="mb-4">
-            Recruiter Profile
+            Recruiter Profile - Updated
           </h2>
 
           {message && (
