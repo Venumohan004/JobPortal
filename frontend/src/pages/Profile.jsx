@@ -26,8 +26,8 @@ function Profile() {
       setProfile({
         company_name: res.data.company_name || "",
         company_email: res.data.company_email || "",
-        location: res.data.location || "",
-        website: res.data.website || "",
+        location: res.data.company_location || "",
+        website: res.data.company_website || "",
       });
     } catch (err) {
       console.log("No recruiter profile found");
@@ -48,14 +48,14 @@ function Profile() {
   const payload = {
     company_name: profile.company_name,
     company_email: profile.company_email,
-    location: profile.location,
-    website: profile.website,
+    company_location: profile.location,
+    company_website: profile.website,
   };
 
   console.log("Sending payload:", payload);
 
   try {
-    const res = await api.post("/recruiter/profile", payload);
+    const res = await api.put("/recruiter/profile", payload);
 
     console.log("Save response:", res.data);
 

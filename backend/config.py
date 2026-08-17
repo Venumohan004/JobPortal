@@ -20,7 +20,7 @@ class Config:
     DATABASE_URL = os.getenv("DATABASE_URL")
 
     if DATABASE_URL:
-        # Render / PostgreSQL
+        # PostgreSQL / Render / Supabase
         if DATABASE_URL.startswith("postgres://"):
             DATABASE_URL = DATABASE_URL.replace(
                 "postgres://",
@@ -69,7 +69,7 @@ class Config:
     # =========================
     FRONTEND_URL = os.getenv(
         "FRONTEND_URL",
-        "http://localhost:5173"
+        "https://jobportal-frontend-uojm.onrender.com"
     )
 
     # =========================
