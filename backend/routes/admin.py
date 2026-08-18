@@ -36,7 +36,102 @@ def get_current_admin():
 
     return user
 
+# ============================================================
+# ADMIN PROFILE - GET
+# ============================================================
 
+@admin_bp.route("/admin/profile", methods=["GET"])
+@jwt_required()
+def get_admin_profile():
+
+    admin = get_current_admin()
+
+    if not admin:
+        return jsonify({
+            "message": "Access denied"
+        }), 403
+
+    return jsonify({
+        "id": admin.id,
+        "full_name": admin.full_name,
+        "email": admin.email,
+        "role": admin.role
+    }), 200
+
+
+# ============================================================
+# ADMIN PROFILE - UPDATE
+# ============================================================
+
+@admin_bp.route("/admin/profile", methods=["PUT"])
+@jwt_required()
+def update_admin_profile():
+
+    admin = get_current_admin()
+
+    if not admin:
+        return jsonify({
+            "message": "Access denied"
+        }), 403
+
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+            "message": "JSON data is required"
+        }), 400
+
+    full_name = data.get("full_name")
+    email = data.get("email")
+
+    if not full_name:
+        return jsonify({
+            "message": "Admin name is required"
+        }), 400
+
+    if not email:
+        return jsonify({
+            "message": "Admin email is required"
+        }), 400
+
+    try:
+
+        # Check whether another user already uses this email
+        existing_user = User.query.filter(
+            User.email == email,
+            User.id != admin.id
+        ).first()
+
+        if existing_user:
+            return jsonify({
+                "message": "Email is already in use"
+            }), 400
+
+        admin.full_name = full_name
+        admin.email = email
+
+        db.session.commit()
+
+        return jsonify({
+            "message": "Admin profile updated successfully",
+            "admin": {
+                "id": admin.id,
+                "full_name": admin.full_name,
+                "email": admin.email,
+                "role": admin.role
+            }
+        }), 200
+
+    except Exception as e:
+
+        db.session.rollback()
+
+        print("ADMIN PROFILE UPDATE ERROR:", e)
+
+        return jsonify({
+            "message": "Failed to update admin profile",
+            "error": str(e)
+        }), 500
 # ============================================================
 # ADMIN DASHBOARD
 # ============================================================
