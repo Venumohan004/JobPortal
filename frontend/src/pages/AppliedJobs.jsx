@@ -10,12 +10,20 @@ function AppliedJobs() {
     fetchApplications();
   }, []);
 
-  const fetchApplications = async () => {
+    const fetchApplications = async () => {
     try {
-      const res = await api.get("/applications");
-      setApplications(res.data || []);
+      const res = await api.get("/my-applications");
+
+      console.log("My Applications:", res.data);
+
+      setApplications(res.data.applications || []);
+
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Failed to load applications:",
+        err.response?.data || err.message
+      );
+
       alert("Failed to load applications");
     } finally {
       setLoading(false);

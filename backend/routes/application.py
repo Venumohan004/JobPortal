@@ -301,7 +301,7 @@ def update_application_status(id):
         application_id=application.id
     ).first()
 
-    if existing_interview:
+    if existing_interview and data.get("status") != "Interview Scheduled":
         return jsonify({
             "message": "Interview already scheduled for this application."
         }), 400

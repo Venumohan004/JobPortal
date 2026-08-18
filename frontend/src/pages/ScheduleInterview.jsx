@@ -60,20 +60,13 @@ function ScheduleInterview() {
           ...formData
 
         }
-
       );
-
-
-
       setMessage(
 
         response.data.message ||
 
         "Interview scheduled successfully"
-
       );
-
-
 
       setError("");
 

@@ -7,79 +7,60 @@ function Profile() {
   const [profile, setProfile] = useState({
     full_name: "",
     email: "",
+    phone: "",
+    location: "",
+    skills: "",
+    bio: "",
     role: "",
   });
 
-  const [message, setMessage] = useState("");
+  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
+  // =========================
+  // Get Profile
+  // =========================
   useEffect(() => {
-    if (role === "admin") {
-      fetchAdminProfile();
-    } else if (role === "recruiter") {
-      fetchRecruiterProfile();
-    } else {
-      setLoading(false);
-    }
-  }, [role]);
+    fetchProfile();
+  }, []);
 
-  // =====================================================
-  // ADMIN PROFILE
-  // =====================================================
-
-  const fetchAdminProfile = async () => {
+  const fetchProfile = async () => {
     try {
-      const res = await api.get("/admin/profile");
+      setLoading(true);
 
-      console.log("Admin profile:", res.data);
+      const res = await api.get("/profile");
+
+      console.log("Profile response:", res.data);
 
       setProfile({
         full_name: res.data.full_name || "",
         email: res.data.email || "",
-        role: res.data.role || "admin",
+        phone: res.data.phone || "",
+        location: res.data.location || "",
+        skills: res.data.skills || "",
+        bio: res.data.bio || "",
+        role: res.data.role || role || "",
       });
+
     } catch (err) {
       console.error(
-        "Admin profile error:",
+        "Profile error:",
         err.response?.data || err.message
       );
 
       setMessage(
         err.response?.data?.message ||
-        "Failed to load admin profile"
+        "Failed to load profile"
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // =====================================================
-  // RECRUITER PROFILE
-  // =====================================================
-
-  const fetchRecruiterProfile = async () => {
-    try {
-      const res = await api.get("/recruiter/profile");
-
-      console.log("Recruiter profile:", res.data);
-
-      setProfile({
-        company_name: res.data.company_name || "",
-        company_email: res.data.company_email || "",
-        location: res.data.company_location || "",
-        website: res.data.company_website || "",
-      });
-    } catch (err) {
-      console.log("No recruiter profile found");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // =====================================================
-  // HANDLE INPUT
-  // =====================================================
-
+  // =========================
+  // Handle Input
+  // =========================
   const handleChange = (e) => {
     setProfile({
       ...profile,
@@ -87,83 +68,46 @@ function Profile() {
     });
   };
 
-  // =====================================================
-  // SAVE ADMIN PROFILE
-  // =====================================================
-
-  const handleAdminSubmit = async (e) => {
+  // =========================
+  // Update Profile
+  // =========================
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await api.put("/admin/profile", {
+      const res = await api.put("/profile", {
         full_name: profile.full_name,
-        email: profile.email,
+        phone: profile.phone,
+        location: profile.location,
+        skills: profile.skills,
+        bio: profile.bio,
       });
 
-      console.log("Admin save response:", res.data);
+      console.log("Update response:", res.data);
 
-      setMessage("Admin profile updated successfully!");
+      setMessage("Profile updated successfully!");
 
-      await fetchAdminProfile();
+      setEditing(false);
+
+      // Refresh latest profile
+      await fetchProfile();
 
     } catch (err) {
       console.error(
-        "Admin save error:",
+        "Update profile error:",
         err.response?.data || err.message
       );
 
       setMessage(
         err.response?.data?.message ||
-        "Failed to update admin profile"
+        "Failed to update profile"
       );
     }
   };
 
-  // =====================================================
-  // SAVE RECRUITER PROFILE
-  // =====================================================
-
-  const handleRecruiterSubmit = async (e) => {
-    e.preventDefault();
-
-    const payload = {
-      company_name: profile.company_name,
-      company_email: profile.company_email,
-      company_location: profile.location,
-      company_website: profile.website,
-    };
-
-    try {
-      const res = await api.put(
-        "/recruiter/profile",
-        payload
-      );
-
-      console.log("Save response:", res.data);
-
-      setMessage(
-        "Recruiter profile saved successfully!"
-      );
-
-      await fetchRecruiterProfile();
-
-    } catch (err) {
-      console.error(
-        "Save error:",
-        err.response?.data || err.message
-      );
-
-      setMessage(
-        err.response?.data?.message ||
-        "Failed to save profile"
-      );
-    }
-  };
-
-  // =====================================================
-  // LOADING
-  // =====================================================
-
+  // =========================
+  // Loading
+  // =========================
   if (loading) {
     return (
       <div className="container py-5 text-center">
@@ -172,201 +116,277 @@ function Profile() {
     );
   }
 
-  // =====================================================
-  // ADMIN PROFILE
-  // =====================================================
-
-  if (role === "admin") {
-    return (
-      <div
-        className="container py-5"
-        style={{ maxWidth: "700px" }}
-      >
-        <div className="card shadow p-4">
-
-          <h2 className="mb-4">
-            Admin Profile
-          </h2>
-
-          {message && (
-            <div className="alert alert-info">
-              {message}
-            </div>
-          )}
-
-          <form onSubmit={handleAdminSubmit}>
-
-            {/* Admin Name */}
-            <div className="mb-3">
-              <label className="form-label">
-                Admin Name
-              </label>
-
-              <input
-                type="text"
-                name="full_name"
-                className="form-control"
-                value={profile.full_name}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            {/* Email */}
-            <div className="mb-3">
-              <label className="form-label">
-                Email
-              </label>
-
-              <input
-                type="email"
-                name="email"
-                className="form-control"
-                value={profile.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            {/* Role */}
-            <div className="mb-4">
-              <label className="form-label">
-                Role
-              </label>
-
-              <input
-                type="text"
-                className="form-control"
-                value="Admin"
-                disabled
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-            >
-              Save Changes
-            </button>
-
-          </form>
-
-        </div>
-      </div>
-    );
-  }
-
-  // =====================================================
-  // RECRUITER PROFILE
-  // =====================================================
-
-  if (role === "recruiter") {
-    return (
-      <div
-        className="container py-5"
-        style={{ maxWidth: "700px" }}
-      >
-        <div className="card shadow p-4">
-
-          <h2 className="mb-4">
-            Recruiter Profile
-          </h2>
-
-          {message && (
-            <div className="alert alert-info">
-              {message}
-            </div>
-          )}
-
-          <form onSubmit={handleRecruiterSubmit}>
-
-            <div className="mb-3">
-              <label className="form-label">
-                Company Name
-              </label>
-
-              <input
-                type="text"
-                name="company_name"
-                className="form-control"
-                value={profile.company_name || ""}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">
-                Company Email
-              </label>
-
-              <input
-                type="email"
-                name="company_email"
-                className="form-control"
-                value={profile.company_email || ""}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">
-                Location
-              </label>
-
-              <input
-                type="text"
-                name="location"
-                className="form-control"
-                value={profile.location || ""}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="form-label">
-                Website
-              </label>
-
-              <input
-                type="url"
-                name="website"
-                className="form-control"
-                value={profile.website || ""}
-                onChange={handleChange}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-            >
-              Save Profile
-            </button>
-
-          </form>
-
-        </div>
-      </div>
-    );
-  }
-
-  // =====================================================
-  // CANDIDATE PROFILE
-  // =====================================================
-
   return (
-    <div className="container py-5">
-      <div className="card shadow p-4">
+    <div
+      className="container py-5"
+      style={{ maxWidth: "700px" }}
+    >
+      <div className="card shadow border-0">
 
-        <h2>My Profile</h2>
+        {/* Header */}
+        <div className="card-header bg-dark text-white p-4">
+          <h2 className="mb-1">My Profile</h2>
+          <p className="mb-0">
+            View and manage your account details
+          </p>
+        </div>
 
-        <p className="text-muted">
-          Welcome! You are logged in.
-        </p>
+        <div className="card-body p-4">
 
+          {/* Message */}
+          {message && (
+            <div className="alert alert-info">
+              {message}
+            </div>
+          )}
+
+          {!editing ? (
+            <>
+              {/* Full Name */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Full Name
+                </label>
+
+                <div className="form-control bg-light">
+                  {profile.full_name || "-"}
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Email
+                </label>
+
+                <div className="form-control bg-light">
+                  {profile.email || "-"}
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Contact Number
+                </label>
+
+                <div className="form-control bg-light">
+                  {profile.phone || "Not added"}
+                </div>
+              </div>
+
+              {/* Role */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Role
+                </label>
+
+                <div>
+                  <span className="badge bg-primary text-capitalize px-3 py-2">
+                    {profile.role}
+                  </span>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Location
+                </label>
+
+                <div className="form-control bg-light">
+                  {profile.location || "Not added"}
+                </div>
+              </div>
+
+              {/* Skills - Candidate */}
+              {role === "candidate" && (
+                <>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">
+                      Skills
+                    </label>
+
+                    <div className="form-control bg-light">
+                      {profile.skills || "Not added"}
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">
+                      Bio
+                    </label>
+
+                    <div className="form-control bg-light">
+                      {profile.bio || "Not added"}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Edit Button */}
+              <button
+                className="btn btn-primary mt-3"
+                onClick={() => {
+                  setMessage("");
+                  setEditing(true);
+                }}
+              >
+                Edit Profile
+              </button>
+            </>
+          ) : (
+            <form onSubmit={handleSubmit}>
+
+              {/* Full Name */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Full Name
+                </label>
+
+                <input
+                  type="text"
+                  name="full_name"
+                  className="form-control"
+                  value={profile.full_name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Email
+                </label>
+
+                <input
+                  type="email"
+                  className="form-control"
+                  value={profile.email}
+                  disabled
+                />
+
+                <small className="text-muted">
+                  Email cannot be changed.
+                </small>
+              </div>
+
+              {/* Phone */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Contact Number
+                </label>
+
+                <input
+                  type="text"
+                  name="phone"
+                  className="form-control"
+                  value={profile.phone}
+                  onChange={handleChange}
+                  placeholder="Enter contact number"
+                />
+              </div>
+
+              {/* Role */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Role
+                </label>
+
+                <input
+                  type="text"
+                  className="form-control text-capitalize"
+                  value={profile.role}
+                  disabled
+                />
+
+                <small className="text-muted">
+                  Role cannot be changed.
+                </small>
+              </div>
+
+              {/* Location */}
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Location
+                </label>
+
+                <input
+                  type="text"
+                  name="location"
+                  className="form-control"
+                  value={profile.location}
+                  onChange={handleChange}
+                  placeholder="Enter your location"
+                />
+              </div>
+
+              {/* Candidate Fields */}
+              {role === "candidate" && (
+                <>
+                  {/* Skills */}
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">
+                      Skills
+                    </label>
+
+                    <input
+                      type="text"
+                      name="skills"
+                      className="form-control"
+                      value={profile.skills}
+                      onChange={handleChange}
+                      placeholder="Python, React, SQL..."
+                    />
+                  </div>
+
+                  {/* Bio */}
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">
+                      Bio
+                    </label>
+
+                    <textarea
+                      name="bio"
+                      className="form-control"
+                      rows="4"
+                      value={profile.bio}
+                      onChange={handleChange}
+                      placeholder="Tell us about yourself..."
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Buttons */}
+              <div className="d-flex gap-2 mt-4">
+
+                <button
+                  type="submit"
+                  className="btn btn-success"
+                >
+                  Save Changes
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setEditing(false);
+                    setMessage("");
+                    fetchProfile();
+                  }}
+                >
+                  Cancel
+                </button>
+
+              </div>
+
+            </form>
+          )}
+
+        </div>
       </div>
     </div>
   );
