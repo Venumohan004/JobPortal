@@ -9,9 +9,7 @@ function FeaturedJobs() {
 
    useEffect(() => {
       api
-        .get("/jobs?sort=salary_desc&per_page=3", {
-          timeout: 6000,
-        })
+        .get("/jobs?sort=salary_desc&per_page=3")
         .then((response) => {
           setFeaturedJobs(response.data.jobs || []);
           setLoading(false);

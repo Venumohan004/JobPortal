@@ -42,7 +42,6 @@ function Jobs() {
             page: 1,
             per_page: 50,
           },
-          timeout: 6000,
         });
 
         setJobs(response.data.jobs || []);
@@ -70,7 +69,6 @@ function Jobs() {
           page: 1,
           per_page: 5,
         },
-        timeout: 5000,
       });
 
       const firstFiveJobs = response.data.jobs || [];
@@ -117,7 +115,6 @@ function Jobs() {
           page: 1,
           per_page: 50,
         },
-        timeout: 6000,
       });
 
       const allJobs = response.data.jobs || [];
