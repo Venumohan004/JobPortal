@@ -21,6 +21,11 @@ function CreateJob() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Get logged-in user role
+  const getUserRole = () => {
+    return localStorage.getItem("role") || "";
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -35,7 +40,11 @@ function CreateJob() {
     setSuccess("");
 
     // Basic validation
-    if (!formData.title || !formData.company || !formData.location) {
+    if (
+      !formData.title ||
+      !formData.company ||
+      !formData.location
+    ) {
       setError("Please fill all required fields.");
       return;
     }
@@ -45,12 +54,18 @@ function CreateJob() {
       formData.max_salary &&
       Number(formData.min_salary) > Number(formData.max_salary)
     ) {
-      setError("Minimum salary cannot be greater than maximum salary.");
+      setError(
+        "Minimum salary cannot be greater than maximum salary."
+      );
       return;
     }
 
     try {
       setLoading(true);
+
+      const role = getUserRole();
+
+      console.log("Logged-in role:", role);
 
       const payload = {
         ...formData,
@@ -62,7 +77,15 @@ function CreateJob() {
           : null,
       };
 
-      const response = await api.post("/jobs", payload);
+      // Admin and recruiter use different backend endpoints
+      const endpoint =
+        role === "admin"
+          ? "/admin/jobs"
+          : "/jobs";
+
+      console.log("Creating job using:", endpoint);
+
+      const response = await api.post(endpoint, payload);
 
       console.log("Job created:", response.data);
 
@@ -81,17 +104,22 @@ function CreateJob() {
         description: "",
       });
 
-      // Redirect after 2 seconds
+      // Redirect according to role
       setTimeout(() => {
-        navigate("/recruiter-dashboard");
-      }, 2000);
+        if (role === "admin") {
+          navigate("/admin-dashboard");
+        } else {
+          navigate("/recruiter-dashboard");
+        }
+      }, 1500);
 
     } catch (err) {
-      console.error(err);
+      console.error("Create job error:", err);
 
       setError(
         err.response?.data?.message ||
         err.response?.data?.error ||
+        err.response?.data?.msg ||
         "Failed to create job"
       );
     } finally {
@@ -99,24 +127,35 @@ function CreateJob() {
     }
   };
 
+  const role = getUserRole();
+
   return (
     <div className="container py-5">
       <div className="row justify-content-center">
         <div className="col-lg-8">
 
           <div className="card shadow border-0">
+
             <div className="card-header bg-primary text-white">
-              <h2 className="mb-0">Post a New Job</h2>
+              <h2 className="mb-0">
+                {role === "admin"
+                  ? "Admin - Post a New Job"
+                  : "Post a New Job"}
+              </h2>
             </div>
 
             <div className="card-body p-4">
 
               {error && (
-                <div className="alert alert-danger">{error}</div>
+                <div className="alert alert-danger">
+                  {error}
+                </div>
               )}
 
               {success && (
-                <div className="alert alert-success">{success}</div>
+                <div className="alert alert-success">
+                  {success}
+                </div>
               )}
 
               <form onSubmit={handleSubmit}>
@@ -140,6 +179,7 @@ function CreateJob() {
 
                 {/* Company & Location */}
                 <div className="row">
+
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold">
                       Company *
@@ -171,10 +211,12 @@ function CreateJob() {
                       required
                     />
                   </div>
+
                 </div>
 
                 {/* Salary */}
                 <div className="row">
+
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold">
                       Minimum Salary
@@ -204,10 +246,12 @@ function CreateJob() {
                       onChange={handleChange}
                     />
                   </div>
+
                 </div>
 
                 {/* Job Type & Experience */}
                 <div className="row">
+
                   <div className="col-md-6 mb-3">
                     <label className="form-label fw-semibold">
                       Job Type
@@ -241,10 +285,12 @@ function CreateJob() {
                       onChange={handleChange}
                     />
                   </div>
+
                 </div>
 
                 {/* Skills */}
                 <div className="mb-3">
+
                   <label className="form-label fw-semibold">
                     Required Skills
                   </label>
@@ -261,10 +307,12 @@ function CreateJob() {
                   <div className="form-text">
                     Separate skills with commas.
                   </div>
+
                 </div>
 
                 {/* Description */}
                 <div className="mb-4">
+
                   <label className="form-label fw-semibold">
                     Job Description
                   </label>
@@ -277,28 +325,40 @@ function CreateJob() {
                     value={formData.description}
                     onChange={handleChange}
                   />
+
                 </div>
 
                 {/* Buttons */}
                 <div className="d-flex gap-3">
+
                   <button
                     type="submit"
                     className="btn btn-primary"
                     disabled={loading}
                   >
-                    {loading ? "Posting..." : "Post Job"}
+                    {loading
+                      ? "Posting..."
+                      : "Post Job"}
                   </button>
 
                   <button
                     type="button"
                     className="btn btn-outline-secondary"
-                    onClick={() => navigate("/recruiter/dashboard")}
+                    onClick={() =>
+                      navigate(
+                        role === "admin"
+                          ? "/admin-dashboard"
+                          : "/recruiter-dashboard"
+                      )
+                    }
                   >
                     Cancel
                   </button>
+
                 </div>
 
               </form>
+
             </div>
           </div>
 

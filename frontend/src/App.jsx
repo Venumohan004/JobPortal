@@ -102,7 +102,7 @@ function App() {
         <Route
           path="/create-job"
           element={
-            <ProtectedRoute allowedRoles={["recruiter"]}>
+            <ProtectedRoute allowedRoles={["recruiter", "admin"]}>
               <CreateJob />
             </ProtectedRoute>
           }
